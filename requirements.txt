@@ -6,3 +6,6 @@ bs4>=0.0.1
 beautifulsoup4>=4.5.1
 timedelta
 tushare
+matplotlib
+scikit-build
+opencv-python

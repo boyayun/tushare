@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding:utf-8 -*- 
 import tushare as ts
 import os
@@ -142,8 +142,8 @@ if __name__ == '__main__':
     # print(index_basic)
 
     # # 指数日线行情
-    # index_daily = ts_api.index_daily(ts_code='399300.SZ', start_date='20190101', end_date='20190910')
-    # print(index_daily)
+    index_daily = ts_api.index_daily(ts_code='399300.SZ', start_date='20190101', end_date='20190910')
+    print(index_daily)
 
     # # 指数周线行情
     # index_weekly = ts_api.index_weekly(ts_code='399300.SZ', start_date='20190101', end_date='20190910')
