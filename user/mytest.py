@@ -2,35 +2,37 @@
 # -*- coding:utf-8 -*- 
 import tushare as ts
 import os
+import sys
+import pandas as pd
 import time
 from datetime import timedelta
 from datetime import datetime
 import tushare.stock as stock
+from show import Show
 
-def fetch_kline_data(code):
-    filename = code+'.csv'
-    if not os.path.exists(filename):
-        end_date = datetime.strftime(datetime.now(), '%Y%m%d')#获取当前时间
-        outputflag = True
-        api = ts.pro_api()
-        while outputflag:#循环判断，直到返还的数据为空
-           data = ts.pro_bar(api=api,ts_code=code,
-                                end_date=end_date,asset='E', adj=None, freq='D')
-           if data.empty == True:
-               outputflag = False
-           else:
-                #计算下次请求数据的截止日期
-                temp = datetime.strptime(data.iloc[-1]['trade_date'],
-                                              '%Y%m%d')
-                print(temp)
-                print(timedelta(hours=24))
-                next_end_date = temp - timedelta(hours=24)
-                end_date = datetime.strftime(next_end_date, '%Y%m%d')
-                #写csv文件
-                if os.path.exists(filename):
-                    data.to_csv(filename, header=None, mode='a')#追加写入模式
-                else:
-                    data.to_csv(filename, header=None, mode='a')
+def fetch_kline_data(code, freq, start):
+    filename = code
+    # if not os.path.exists(filename):
+    end_date = datetime.strftime(datetime.now(), '%Y%m%d')#获取当前时间
+    outputflag = True
+    api = ts.pro_api()
+    while outputflag:#循环判断，直到返还的数据为空
+        data = ts.pro_bar(api=api, ts_code=code, start_date=start, end_date=end_date, asset='E', freq=freq)
+        if data.empty is True:
+            outputflag = False
+        else:
+            #计算下次请求数据的截止日期
+            temp = datetime.strptime(data.iloc[-1]['trade_date'],
+                                            '%Y%m%d')
+            print(temp)
+            print(timedelta(hours=24))
+            next_end_date = temp - timedelta(hours=24)
+            end_date = datetime.strftime(next_end_date, '%Y%m%d')
+            #写csv文件
+            if os.path.exists(filename):
+                data.to_csv(filename, header=None, mode='a')#追加写入模式
+            else:
+                data.to_csv(filename, header=None, mode='a')
 
 def fetch_finance_indicator(code):
     filename = code + '_finance.csv'
@@ -56,6 +58,26 @@ if __name__ == '__main__':
     ts.set_token('4e5a2ec168a5d1108211422dd7a1b1ca8b3ecd35c799ec6f170e92a1')
     # 初始化接口
     ts_api = ts.pro_api()
+
+    if len(sys.argv) == 4:
+        start = sys.argv[3]
+        freq = sys.argv[2]
+        code = sys.argv[1]
+    elif len(sys.argv) == 3:
+        start = sys.argv[2]
+        freq = sys.argv[1]
+        code = '603986.SH'
+    elif len(sys.argv) == 2:
+        start = sys.argv[1]
+        freq = 'D'
+        code = '603986.SH'
+    else:
+        start = ''
+        freq = 'D'
+        code = '603986.SH'
+
+    if os.path.exists(code):
+        os.remove(code)
 
     # df = ts.realtime_boxoffice()
     # print(df)
@@ -84,11 +106,13 @@ if __name__ == '__main__':
     # print(month)
 
     # # 通用数据
-    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', adj='qfq', start_date='20200901', end_date='20200903', ma=[5],
+    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', adj='qfq', start_date='20200301', end_date='20200903', ma=[5],
     #                   freq='1MIN')
     # print(pro_bar)
 
-    # fetch_kline_data('603986.SH')
+    fetch_kline_data(code, freq, start)
+    show = Show(name = code)
+    show.show()    
 
     # # 利润表
     # income = ts_api.income(ts_code='603986.SH', start_date='20200101', end_date='20200901')
@@ -142,8 +166,8 @@ if __name__ == '__main__':
     # print(index_basic)
 
     # # 指数日线行情
-    index_daily = ts_api.index_daily(ts_code='399300.SZ', start_date='20190101', end_date='20190910')
-    print(index_daily)
+    # index_daily = ts_api.index_daily(ts_code='399300.SZ', start_date='20190101', end_date='20190910')
+    # print(index_daily)
 
     # # 指数周线行情
     # index_weekly = ts_api.index_weekly(ts_code='399300.SZ', start_date='20190101', end_date='20190910')

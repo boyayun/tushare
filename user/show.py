@@ -4,81 +4,136 @@ import os
 import sys
 import signal
 import time
+from datetime import datetime
 import cv2 as cv
-
+import pandas as pd
 import matplotlib.pyplot as plt   # 导入模块 matplotlib.pyplot，并简写成 plt 
 import numpy as np                # 导入模块 numpy，并简写成 np
     
 class Show(object):
-    def __init__(self, data=None, name=None, path=None):
+    def __init__(self, data=None, name='', path=''):
         signal.signal(signal.SIGINT, self.signal_handler)
-        self.data = data
+        # print(data)
+        print(path)
+        if path == '':
+            self.path = './'
+        else:
+            self.path = path + '/'
+
+        csv_data = pd.read_csv(self.path + name, usecols=[2,6])  # 读取数据
+        self.data = csv_data.values.tolist()
         self.name = name
-        self.path = path
 
     def signal_handler(self, signal, frame):
-        print('ctrl + c')
         sys.exit(0)
+
+    def get_position(self):
+        x = [i[0] for i in self.data]
+        x.reverse()
+        # print(x)
+        xs = [datetime.strptime(str(d)[0:-2], '%Y%m%d').date() for d in x]
+        # print(xs)
+        y = [i[1] for i in self.data]
+        y.reverse()
+        # print(y)
+        return xs, y
+
+    def get_point(self, xs, y):
+        price_last = 0
+        price = 0        
+        high_x = []
+        high_y = []
+        low_x = []
+        low_y = []        
+        for i in range(len(y)):
+            if price >= y[i] and price >= price_last and price_last != 0:
+                high_x.append(xs[i-1])
+                high_y.append(price)
+
+            if price <= y[i] and price <= price_last and price_last != 0:
+                low_x.append(xs[i-1])
+                low_y.append(price)
+
+            price_last = price
+            price = y[i]
+        return high_x, high_y, low_x, low_y
+
+    def draw_point(self, high_x, high_y, low_x, low_y):
+        # 绘制散点(3, 6)
+        for i in range(len(high_y)):            
+            plt.scatter(high_x[i], high_y[i], s=30, color='red')      # s 为点的 size
+            # 对(3, 6)做标注
+            plt.annotate(str(high_y[i]), xy=(high_x[i], high_y[i]+0.5), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
+
+        # 绘制散点(3, 6)
+        for i in range(len(low_y)):            
+            plt.scatter(low_x[i], low_y[i], s=30, color='green')      # s 为点的 size
+            # 对(3, 6)做标注
+            plt.annotate(str(low_y[i]), xy=(low_x[i], low_y[i]-3.5), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
+
+        # plt.text(3.3, 5, "this point very important",
+        #     fontdict={'size': 12, 'color': 'green'})  # xycoords='data' 是说基于数据的值来选位置
 
     def show(self):
         # 创建一个点数为 8 x 6 的窗口, 并设置分辨率为 80像素/每英寸
-        plt.figure(figsize=(8, 6), dpi=80)
+        plt.figure(figsize=(16, 9), dpi=80)
         # 再创建一个规格为 1 x 1 的子图
         plt.subplot(111)
+        plt.title(self.name)
 
-        x = np.linspace(-2, 6, 50)
-        y1 = x + 3      # 曲线 y1
-        y2 = 3 - x      # 曲线 y2
-
-
-        # 绘制颜色为蓝色、宽度为 1 像素的连续曲线 y1
-        plt.plot(x, y1, color="blue", linewidth=1.0, linestyle="-", label="y1")
-        # 绘制散点(3, 6)
-        plt.scatter([3], [6], s=30, color="blue")      # s 为点的 size
-        # 对(3, 6)做标注
-        plt.annotate("(3, 6)", xy=(3.3, 5.5))      # 在(3.3, 5.5)上做标注
-        plt.text(3.3, 5, "this point very important",
-            fontdict={'size': 12, 'color': 'green'})  # xycoords='data' 是说基于数据的值来选位置
-
-        # 绘制颜色为红色、宽度为 2 像素的不连续曲线 y2
-        plt.plot(x, y2, color="red", linewidth=2.0, linestyle="--", label="y2")
-        # 绘制散点(3, 0)
-        plt.scatter([3], [0], s=50, color="#800080")
-        # 对(3, 0)做标注
-        plt.annotate("(3, 0)",
-                    xy=(3.3, 0),            # 在(3.3, 0)上做标注
-                    fontsize=16,          # 设置字体大小为 16
-                    xycoords='data')    # xycoords='data' 是说基于数据的值来选位置
-
-        plt.legend(loc="upper left")
+        xs, y = self.get_position()
+        high_x, high_y, low_x, low_y = self.get_point(xs, y)
+        self.draw_point(high_x, high_y, low_x, low_y)
         
+        # 绘制颜色为蓝色、宽度为 1 像素的连续曲线 y1
+        plt.plot(high_x, high_y, color='red', linewidth=1.0, linestyle="--", label="y")
+        plt.plot(low_x, low_y, color='green', linewidth=1.0, linestyle="--", label="y")
+
+        plt.plot(xs, y, 'b', linewidth=1.0, linestyle="-", label="y")
+        plt.gcf().autofmt_xdate()
+
+        # plt.legend(loc="upper left")        
         # 设置横轴的上下限
-        plt.xlim(-1, 6)
+        # plt.xlim(20160818, 20200901)
         # 设置纵轴的上下限
-        plt.ylim(-2, 10)
-
+        # plt.ylim(30, 500)
         # 设置横轴标签
-        plt.xlabel("X")
+        # plt.xlabel("X")
         # 设置纵轴标签
-        plt.ylabel("Y")
-
+        # plt.ylabel("Y")
         # 设置横轴精准刻度
-        plt.xticks([-1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5])
+        # plt.xticks([-1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5])
         # 设置纵轴精准刻度
-        plt.yticks([-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-
-        # # 设置横轴精准刻度
+        # plt.yticks([-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        # 设置横轴精准刻度
         # plt.xticks([-1, 0, 1, 2, 3, 4, 5, 6],
         #         ["-1m", "0m", "1m", "2m", "3m", "4m", "5m", "6m"])
         # # 设置纵轴精准刻度
         # plt.yticks([-2, 0, 2, 4, 6, 8, 10],
         #         ["-2m", "0m", "2m", "4m", "6m", "8m", "10m"])
         plt.show(block=False)
-if __name__ == "__main__":
-    show = Show()
-    show.show()
-    while plt.waitforbuttonpress() == False:
-        time.sleep(0.1)
+        while plt.waitforbuttonpress() == False:
+            time.sleep(0.1)
 
-    plt.savefig('testblueline.jpg')
+        plt.savefig('testblueline.jpg')        
+if __name__ == "__main__":
+
+    csv_file = sys.argv[1]
+    # print('csv_file:', csv_file)
+
+    # csv_data = pd.read_csv(csv_file, usecols=[2,6])  # 读取数据
+    # print(csv_data.shape)  # (189, 9)
+    # print(csv_data.head(5))  # (189, 9)
+    # N = 5
+    # csv_batch_data = csv_data.tail(N)  # 取后5条数据
+    # print('csv_batch_data:',csv_batch_data)
+    # print(csv_batch_data.shape)  # (5, 9)
+
+    # train_batch_data = csv_data.ix[:,:]#[list(range(3, 6))]  # 取这20条数据的3到5列值(索引从0开始)
+    # print(train_batch_data)    
+
+    # exit(0)
+    show = Show(name = csv_file)
+    show.show()
+
 
