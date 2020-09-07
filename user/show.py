@@ -114,9 +114,10 @@ class Show(object):
             plt.plot(x, y, color='green', linewidth=linewidth, linestyle="--", label="y")
     def show(self):
         # 创建一个点数为 8 x 6 的窗口, 并设置分辨率为 80像素/每英寸
-        plt.figure(figsize=(16, 9), dpi=80)
+        # plt.figure(figsize=(16, 9), dpi=80)
         # 再创建一个规格为 1 x 1 的子图
-        plt.subplot(111)
+        # plt.subplot(111)
+        fig1, ax = plt.subplots()
         plt.title(self.name)
 
         xs, ys = self.get_position()
@@ -129,7 +130,7 @@ class Show(object):
         plt.plot(low_x, low_y, color='green', linewidth=1.0, linestyle="--", label="y")
         # 绘制颜色为蓝色、宽度为 1 像素的连续曲线 y1
         plt.plot(xs, ys, 'b', linewidth=1.0, linestyle="-", label="y")
-        plt.gcf().autofmt_xdate()
+        # plt.gcf().autofmt_xdate()
 
         # plt.legend(loc="upper left")
         # 设置横轴的上下限
@@ -145,8 +146,10 @@ class Show(object):
         # 设置纵轴精准刻度
         # plt.yticks([-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         # 设置横轴精准刻度
-        # plt.xticks([-1, 0, 1, 2, 3, 4, 5, 6],
-        #         ["-1m", "0m", "1m", "2m", "3m", "4m", "5m", "6m"])
+        xticks=list(range(0,len(xs),5))
+        xlabels=[xs[x] for x in xticks]
+        xlabels.append(xs[-1])
+        plt.xticks(xlabels, rotation = -90)
         # # 设置纵轴精准刻度
         # plt.yticks([-2, 0, 2, 4, 6, 8, 10],
         #         ["-2m", "0m", "2m", "4m", "6m", "8m", "10m"])
