@@ -21,7 +21,7 @@ class Show(object):
             self.path = path + '/'
 
         self.name = name
-        csv_data = pd.read_csv(self.path + self.name, usecols=[2,6])  # 读取数据
+        csv_data = pd.read_csv(self.path + self.name, usecols=[2,6], header=None)  # 读取数据
         self.data = csv_data.values.tolist()
 
     def signal_handler(self, signal, frame):
@@ -31,6 +31,7 @@ class Show(object):
         x = [i[0] for i in self.data]
         x.reverse()
         # print(x)
+        # print(len(x))
         xs = [datetime.strptime(str(d)[0:-2], '%Y%m%d').date() for d in x]
         # print(xs)
         y = [i[1] for i in self.data]
@@ -46,6 +47,22 @@ class Show(object):
         low_x = []
         low_y = []
         for i in range(len(y)):
+            if i == 1:
+                if price >= y[i]:
+                    high_x.append(xs[i-1])
+                    high_y.append(price)
+                elif price <= y[i]:
+                    low_x.append(xs[i-1])
+                    low_y.append(price)
+
+            if i == len(y) - 1:
+                if price <= y[i]:
+                    high_x.append(xs[i])
+                    high_y.append(y[i])
+                elif price >= y[i]:
+                    low_x.append(xs[i])
+                    low_y.append(y[i])
+
             if price >= y[i] and price >= price_last and price_last != 0:
                 high_x.append(xs[i-1])
                 high_y.append(price)
