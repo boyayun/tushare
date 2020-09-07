@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt   # 导入模块 matplotlib.pyplot，并简写�
 import numpy as np                # 导入模块 numpy，并简写成 np
 
 class Show(object):
-    def __init__(self, data=None, name='', path=''):
+    def __init__(self, data=None, name='', path='', freq = 'D'):
         signal.signal(signal.SIGINT, self.signal_handler)
         # print(data)
         print(path)
@@ -21,8 +21,13 @@ class Show(object):
             self.path = path + '/'
 
         self.name = name
-        csv_data = pd.read_csv(self.path + self.name, usecols=[2,6], header=None)  # 读取数据
+        date = 2
+        close = 6
+        if freq != 'D':
+            close = 3
+        csv_data = pd.read_csv(self.path + self.name, usecols=[date, close], header=None)  # 读取数据
         self.data = csv_data.values.tolist()
+        self.freq = freq
 
     def signal_handler(self, signal, frame):
         sys.exit(0)

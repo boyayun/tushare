@@ -65,22 +65,21 @@ if __name__ == '__main__':
     # 初始化接口
     ts_api = ts.pro_api()
 
+    code = '603986.SH'
+    freq = 'D'
+    start = ''
     if len(sys.argv) == 4:
-        start = sys.argv[3]
+        code = sys.argv[3]
         freq = sys.argv[2]
-        code = sys.argv[1]
-    elif len(sys.argv) == 3:
-        start = sys.argv[2]
-        freq = sys.argv[1]
-        code = '603986.SH'
-    elif len(sys.argv) == 2:
         start = sys.argv[1]
-        freq = 'D'
+    elif len(sys.argv) == 3:
         code = '603986.SH'
-    else:
-        start = ''
-        freq = 'D'
+        freq = sys.argv[2]
+        start = sys.argv[1]
+    elif len(sys.argv) == 2:
         code = '603986.SH'
+        freq = 'D'
+        start = sys.argv[1]
 
     if os.path.exists(code):
         os.remove(code)
@@ -112,13 +111,12 @@ if __name__ == '__main__':
     # print(month)
 
     # # 通用数据
-    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', adj='qfq', start_date='20200301', end_date='20200903', freq='D')
-    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', start_date='20190601', end_date='20190602', asset='E', freq='D', adj='qfq')
+    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', start_date='20200228', end_date='20200228', asset='E', freq='5MIN', adj='qfq')
     # print(pro_bar)
     # exit(0)
 
     fetch_kline_data(code, freq, start)
-    show = Show(name = code)
+    show = Show(name = code,freq = freq)
     show.show()
 
     # # 利润表
