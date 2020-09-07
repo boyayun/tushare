@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# -*- coding:utf-8 -*- 
+# -*- coding:utf-8 -*-
 import os
 import sys
 import signal
@@ -7,9 +7,9 @@ import time
 from datetime import datetime
 import cv2 as cv
 import pandas as pd
-import matplotlib.pyplot as plt   # 导入模块 matplotlib.pyplot，并简写成 plt 
+import matplotlib.pyplot as plt   # 导入模块 matplotlib.pyplot，并简写成 plt
 import numpy as np                # 导入模块 numpy，并简写成 np
-    
+
 class Show(object):
     def __init__(self, data=None, name='', path=''):
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -20,9 +20,9 @@ class Show(object):
         else:
             self.path = path + '/'
 
-        csv_data = pd.read_csv(self.path + name, usecols=[2,6])  # 读取数据
-        self.data = csv_data.values.tolist()
         self.name = name
+        csv_data = pd.read_csv(self.path + self.name, usecols=[2,6])  # 读取数据
+        self.data = csv_data.values.tolist()
 
     def signal_handler(self, signal, frame):
         sys.exit(0)
@@ -40,11 +40,11 @@ class Show(object):
 
     def get_point(self, xs, y):
         price_last = 0
-        price = 0        
+        price = 0
         high_x = []
         high_y = []
         low_x = []
-        low_y = []        
+        low_y = []
         for i in range(len(y)):
             if price >= y[i] and price >= price_last and price_last != 0:
                 high_x.append(xs[i-1])
@@ -60,13 +60,13 @@ class Show(object):
 
     def draw_point(self, high_x, high_y, low_x, low_y):
         # 绘制散点(3, 6)
-        for i in range(len(high_y)):            
+        for i in range(len(high_y)):
             plt.scatter(high_x[i], high_y[i], s=30, color='red')      # s 为点的 size
             # 对(3, 6)做标注
             plt.annotate(str(high_y[i]), xy=(high_x[i], high_y[i]+0.5), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
 
         # 绘制散点(3, 6)
-        for i in range(len(low_y)):            
+        for i in range(len(low_y)):
             plt.scatter(low_x[i], low_y[i], s=30, color='green')      # s 为点的 size
             # 对(3, 6)做标注
             plt.annotate(str(low_y[i]), xy=(low_x[i], low_y[i]-3.5), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
@@ -74,6 +74,27 @@ class Show(object):
         # plt.text(3.3, 5, "this point very important",
         #     fontdict={'size': 12, 'color': 'green'})  # xycoords='data' 是说基于数据的值来选位置
 
+    def draw_high_line(self, high_x, high_y):
+        x = high_x
+        y = high_y
+        linewidth = 1.0
+        while len(y) >= 2:
+            high_x, high_y, temp_x, temp_y = self.get_point(x, y)
+            x = high_x
+            y = high_y
+            linewidth += 0.5
+            plt.plot(x, y, color='red', linewidth=linewidth, linestyle="--", label="y")
+
+    def draw_low_line(self, low_x, low_y):
+        x = low_x
+        y = low_y
+        linewidth = 1.0
+        while len(x) >= 2:
+            temp_x, temp_y, low_x, low_y = self.get_point(x, y)
+            x = low_x
+            y = low_y
+            linewidth += 0.5
+            plt.plot(x, y, color='green', linewidth=linewidth, linestyle="--", label="y")
     def show(self):
         # 创建一个点数为 8 x 6 的窗口, 并设置分辨率为 80像素/每英寸
         plt.figure(figsize=(16, 9), dpi=80)
@@ -81,18 +102,19 @@ class Show(object):
         plt.subplot(111)
         plt.title(self.name)
 
-        xs, y = self.get_position()
-        high_x, high_y, low_x, low_y = self.get_point(xs, y)
+        xs, ys = self.get_position()
+        high_x, high_y, low_x, low_y = self.get_point(xs, ys)
         self.draw_point(high_x, high_y, low_x, low_y)
-        
-        # 绘制颜色为蓝色、宽度为 1 像素的连续曲线 y1
+        self.draw_high_line(high_x, high_y)
+        self.draw_low_line(low_x, low_y)
+
         plt.plot(high_x, high_y, color='red', linewidth=1.0, linestyle="--", label="y")
         plt.plot(low_x, low_y, color='green', linewidth=1.0, linestyle="--", label="y")
-
-        plt.plot(xs, y, 'b', linewidth=1.0, linestyle="-", label="y")
+        # 绘制颜色为蓝色、宽度为 1 像素的连续曲线 y1
+        plt.plot(xs, ys, 'b', linewidth=1.0, linestyle="-", label="y")
         plt.gcf().autofmt_xdate()
 
-        # plt.legend(loc="upper left")        
+        # plt.legend(loc="upper left")
         # 设置横轴的上下限
         # plt.xlim(20160818, 20200901)
         # 设置纵轴的上下限
@@ -115,7 +137,7 @@ class Show(object):
         while plt.waitforbuttonpress() == False:
             time.sleep(0.1)
 
-        plt.savefig('testblueline.jpg')        
+        plt.savefig(self.path + self.name + '.jpg')
 if __name__ == "__main__":
 
     csv_file = sys.argv[1]
@@ -130,7 +152,7 @@ if __name__ == "__main__":
     # print(csv_batch_data.shape)  # (5, 9)
 
     # train_batch_data = csv_data.ix[:,:]#[list(range(3, 6))]  # 取这20条数据的3到5列值(索引从0开始)
-    # print(train_batch_data)    
+    # print(train_batch_data)
 
     # exit(0)
     show = Show(name = csv_file)

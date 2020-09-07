@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# -*- coding:utf-8 -*- 
+# -*- coding:utf-8 -*-
 import tushare as ts
 import os
 import sys
@@ -9,6 +9,7 @@ from datetime import timedelta
 from datetime import datetime
 import tushare.stock as stock
 from show import Show
+import pandas
 
 def fetch_kline_data(code, freq, start):
     filename = code
@@ -17,22 +18,27 @@ def fetch_kline_data(code, freq, start):
     outputflag = True
     api = ts.pro_api()
     while outputflag:#循环判断，直到返还的数据为空
-        data = ts.pro_bar(api=api, ts_code=code, start_date=start, end_date=end_date, asset='E', freq=freq)
-        if data.empty is True:
-            outputflag = False
-        else:
-            #计算下次请求数据的截止日期
-            temp = datetime.strptime(data.iloc[-1]['trade_date'],
-                                            '%Y%m%d')
-            print(temp)
-            print(timedelta(hours=24))
-            next_end_date = temp - timedelta(hours=24)
-            end_date = datetime.strftime(next_end_date, '%Y%m%d')
-            #写csv文件
-            if os.path.exists(filename):
-                data.to_csv(filename, header=None, mode='a')#追加写入模式
+        data = ts.pro_bar(api=api, ts_code=code, start_date=start, end_date=end_date, asset='E', freq=freq, adj='qfq')
+        # print('data:', data)
+
+        if isinstance(data, pandas.core.frame.DataFrame):
+            if data.empty is True:
+                outputflag = False
             else:
-                data.to_csv(filename, header=None, mode='a')
+                #计算下次请求数据的截止日期
+                temp = datetime.strptime(data.iloc[-1]['trade_date'],
+                                                '%Y%m%d')
+                # print(temp)
+                # print(timedelta(hours=24))
+                next_end_date = temp - timedelta(hours=24)
+                end_date = datetime.strftime(next_end_date, '%Y%m%d')
+                #写csv文件
+                if os.path.exists(filename):
+                    data.to_csv(filename, header=None, mode='a')#追加写入模式
+                else:
+                    data.to_csv(filename, header=None, mode='a')
+        else:
+            outputflag = False
 
 def fetch_finance_indicator(code):
     filename = code + '_finance.csv'
@@ -106,13 +112,14 @@ if __name__ == '__main__':
     # print(month)
 
     # # 通用数据
-    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', adj='qfq', start_date='20200301', end_date='20200903', ma=[5],
-    #                   freq='1MIN')
+    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', adj='qfq', start_date='20200301', end_date='20200903', freq='D')
+    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', start_date='20190601', end_date='20190602', asset='E', freq='D', adj='qfq')
     # print(pro_bar)
+    # exit(0)
 
     fetch_kline_data(code, freq, start)
     show = Show(name = code)
-    show.show()    
+    show.show()
 
     # # 利润表
     # income = ts_api.income(ts_code='603986.SH', start_date='20200101', end_date='20200901')
