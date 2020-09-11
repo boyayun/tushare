@@ -12,7 +12,7 @@ from show import Show
 import pandas
 
 def fetch_kline_data(code, freq, start):
-    filename = code
+    filename = './stocks/' + code
     # if not os.path.exists(filename):
     end_date = datetime.strftime(datetime.now(), '%Y%m%d')#获取当前时间
     outputflag = True
@@ -81,9 +81,6 @@ if __name__ == '__main__':
         freq = 'D'
         start = sys.argv[1]
 
-    if os.path.exists(code):
-        os.remove(code)
-
     # df = ts.realtime_boxoffice()
     # print(df)
     # exit()
@@ -92,9 +89,34 @@ if __name__ == '__main__':
     # new_stock = ts_api.new_share(start_date='20200101', end_date='20200901')
     # print(new_stock)
 
+    # file_name = './stocks/' + code
+    # if os.path.exists(file_name):
+    #     os.remove(file_name)
+    # fetch_kline_data(code, freq, start)
+    # show = Show(code = code,freq = freq, path='./stocks/', name='123')
+    # show.show()
+
     # 股票列表
-    # stocks = ts_api.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-    # print(stocks)
+    stocks = ts_api.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+    # print(stocks['ts_code'], stocks['name'])
+    for i in range(0, len(stocks['ts_code'])):            # len(stocks['ts_code'])
+        code = stocks['ts_code'][i]
+        file_name = './stocks/' + code
+        if os.path.exists(file_name):
+            os.remove(file_name)
+        name = stocks['name'][i]
+        fetch_kline_data(code, freq, start)
+        # show = Show(code = code, name = name, freq = freq, path='./stocks/')
+        # show.show()
+
+        cmd = './user/show.py ' + code + ' ' + name
+        # print(cmd)
+        os.system(cmd)
+
+    # 通用数据
+    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', start_date='20200228', end_date='20200228', asset='E', freq='5MIN', adj='qfq')
+    # print(pro_bar)
+    # exit(0)
 
     # # 日线数据
     # day = ts_api.daily(ts_code='603986.SH', start_date='20200901', end_date='20200902')
@@ -109,15 +131,6 @@ if __name__ == '__main__':
     # month = ts_api.monthly(ts_code='603986.SH', start_date='20200101', end_date='20200902',
     #                       fields='ts_code,trade_date,open,high,low,close,vol,amount')
     # print(month)
-
-    # # 通用数据
-    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', start_date='20200228', end_date='20200228', asset='E', freq='5MIN', adj='qfq')
-    # print(pro_bar)
-    # exit(0)
-
-    fetch_kline_data(code, freq, start)
-    show = Show(name = code,freq = freq)
-    show.show()
 
     # # 利润表
     # income = ts_api.income(ts_code='603986.SH', start_date='20200101', end_date='20200901')

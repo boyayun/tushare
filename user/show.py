@@ -7,25 +7,31 @@ import time
 from datetime import datetime
 import cv2 as cv
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt   # 导入模块 matplotlib.pyplot，并简写成 plt
 import numpy as np                # 导入模块 numpy，并简写成 np
 
+# 解决中文显示问题
+mpl.rcParams[u'font.sans-serif'] = ['simhei']
+mpl.rcParams['axes.unicode_minus'] = False
+
 class Show(object):
-    def __init__(self, data=None, name='', path='', freq = 'D'):
+    def __init__(self, data=None, code='', path='./stocks/', freq = 'D', name = ''):
         signal.signal(signal.SIGINT, self.signal_handler)
         # print(data)
-        print(path)
+        # print(path)
         if path == '':
             self.path = './'
         else:
             self.path = path + '/'
 
         self.name = name
+        self.code = code
         date = 2
         close = 6
         if freq != 'D':
             close = 3
-        csv_data = pd.read_csv(self.path + self.name, usecols=[date, close], header=None)  # 读取数据
+        csv_data = pd.read_csv(self.path + self.code, usecols=[date, close], header=None)  # 读取数据
         self.data = csv_data.values.tolist()
         self.freq = freq
 
@@ -87,12 +93,12 @@ class Show(object):
         # 绘制散点(3, 6)
         for i in range(len(high_y)):
             plt.scatter(high_x[i], high_y[i], s=25, color='red')      # s 为点的 size
-            plt.annotate(str(high_y[i]), xy=(high_x[i], high_y[i]+0.5), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
+            plt.annotate(str(high_y[i]), color='red', xy=(high_x[i], high_y[i]+0.003*high_y[i]), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
 
         # 绘制散点(3, 6)
         for i in range(len(low_y)):
             plt.scatter(low_x[i], low_y[i], s=25, color='green')      # s 为点的 size
-            plt.annotate(str(low_y[i]), xy=(low_x[i], low_y[i]-3.5), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
+            plt.annotate(str(low_y[i]), color='green', xy=(low_x[i], low_y[i]-0.007*low_y[i]), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
 
         # plt.text(3.3, 5, "this point very important",
         #     fontdict={'size': 12, 'color': 'green'})  # xycoords='data' 是说基于数据的值来选位置
@@ -134,62 +140,64 @@ class Show(object):
         return average
 
     def average_line(self, xs, ys):
-        ma5 = self.get_average(ys, 4)
-        ma10 = self.get_average(ys, 9)
-        ma20 = self.get_average(ys, 18)
+        ma5 = self.get_average(ys, 5)
+        ma10 = self.get_average(ys, 10)
+        ma20 = self.get_average(ys, 20)
         ma60 = self.get_average(ys, 60)
 
         pre_rush = False
         rush = False
         pre_run = False
         run = False
-        for i in range(20, len(ys)):
+
+        ret = False
+        for i in range(len(ys)-5, len(ys)):
             # rush
             if ma5[i] >= ma10[i]:
                 if pre_rush == False:
                     pre_rush = True
-                    code = self.name + ':'
+                    code = self.code + ':'
                     print(code, xs[i], 'pre_rush!')
                 if ma10[i] >= ma20[i]:
                     if rush == False:
                         rush = True
-                        code = self.name + ':'
+                        code = self.code + ':'
                         plt.scatter(xs[i], ys[i], s=50, color='red')      # s 为点的 size
                         print(code, xs[i], 'rush!!!')
+                        ret = True
 
             if ma10[i] < ma20[i]:
                 rush = False
             if ma5[i] < ma10[i]:
                 if rush == False:
                     pre_rush = False
-
             # run
-            if ma5[i] <= ma10[i]:
-                if pre_run == False:
-                    pre_run = True
-                    code = self.name + ':'
-                    print(code, xs[i], 'pre_run!')
-                if ma10[i] <= ma20[i]:
-                    if run == False:
-                        run = True
-                        code = self.name + ':'
-                        plt.scatter(xs[i], ys[i], s=50, color='green')      # s 为点的 size
-                        print(code, xs[i], 'run!!!')
+            # if ma5[i] <= ma10[i]:
+            #     if pre_run == False:
+            #         pre_run = True
+            #         code = self.code + ':'
+            #         print(code, xs[i], 'pre_run!')
+            #     if ma10[i] <= ma20[i]:
+            #         if run == False:
+            #             run = True
+            #             code = self.code + ':'
+            #             plt.scatter(xs[i], ys[i], s=50, color='green')      # s 为点的 size
+            #             print(code, xs[i], 'run!!!')
 
-            if ma10[i] > ma20[i]:
-                run = False
-            if ma5[i] > ma10[i]:
-                if run == False:
-                    pre_run = False
-
+            # if ma10[i] > ma20[i]:
+            #     run = False
+            # if ma5[i] > ma10[i]:
+            #     if run == False:
+            #         pre_run = False
         plt.plot(xs, ma5, color=self.colors['ma5'], linewidth=1.5, linestyle="-", label='ma5')
         plt.plot(xs, ma10, color=self.colors['ma10'], linewidth=1.5, linestyle="-", label='ma10')
         plt.plot(xs, ma20, color=self.colors['ma20'], linewidth=1.5, linestyle="-", label='ma20')
         # plt.plot(xs, ma60, color=self.colors['ma60'], linewidth=1.5, linestyle="-", label='ma60')
+        return ret
 
     def show(self):
         # 创建一个点数为 8 x 6 的窗口, 并设置分辨率为 80像素/每英寸
-        # plt.figure(figsize=(16, 9), dpi=80)
+        plt.figure(figsize=(24, 13.5), dpi=80)
         # 再创建一个规格为 1 x 1 的子图
         plt.subplot(111)
         # fig1, ax = plt.subplots()
@@ -197,8 +205,7 @@ class Show(object):
 
         xs, ys = self.get_position()
 
-        self.average_line(xs, ys)
-
+        flag = self.average_line(xs, ys)
         high_x, high_y, low_x, low_y = self.get_point(xs, ys)
         self.draw_point(high_x, high_y, low_x, low_y)
         # self.draw_high_line(high_x, high_y)
@@ -227,29 +234,30 @@ class Show(object):
         # # 设置纵轴精准刻度
         # plt.yticks([-2, 0, 2, 4, 6, 8, 10],
         #         ["-2m", "0m", "2m", "4m", "6m", "8m", "10m"])
-        plt.show(block=False)
-        while plt.waitforbuttonpress() == False:
-            time.sleep(0.1)
+        if flag is True:
+            plt.savefig(self.path + self.code + '_' + self.name+ '.png')
 
-        plt.savefig(self.path + self.name + '.jpg')
+        # plt.show(block=False)
+        # while plt.waitforbuttonpress() == False:
+        #     time.sleep(0.1)
+
 if __name__ == "__main__":
-
     csv_file = sys.argv[1]
-    # print('csv_file:', csv_file)
+    freq = 'D'
+    name = ''
+    path = './stocks/'
 
-    # csv_data = pd.read_csv(csv_file, usecols=[2,6])  # 读取数据
-    # print(csv_data.shape)  # (189, 9)
-    # print(csv_data.head(5))  # (189, 9)
-    # N = 5
-    # csv_batch_data = csv_data.tail(N)  # 取后5条数据
-    # print('csv_batch_data:',csv_batch_data)
-    # print(csv_batch_data.shape)  # (5, 9)
+    if len(sys.argv) == 5:
+        path = sys.argv[4]
+        freq = sys.argv[3]
+        name = sys.argv[2]
+    elif len(sys.argv) == 4:
+        freq = sys.argv[3]
+        name = sys.argv[2]
+    elif len(sys.argv) == 3:
+        name = sys.argv[2]
 
-    # train_batch_data = csv_data.ix[:,:]#[list(range(3, 6))]  # 取这20条数据的3到5列值(索引从0开始)
-    # print(train_batch_data)
-
-    # exit(0)
-    show = Show(name = csv_file)
+    show = Show(code = csv_file, name = name, freq=freq, path=path)
     show.show()
 
 
