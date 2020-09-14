@@ -9,7 +9,10 @@ from datetime import timedelta
 from datetime import datetime
 import tushare.stock as stock
 from show import Show
+from my_select import Select
 import pandas
+import signal
+import csv
 
 def fetch_kline_data(code, freq, start):
     filename = './stocks/' + code
@@ -41,7 +44,7 @@ def fetch_kline_data(code, freq, start):
             outputflag = False
 
 def fetch_finance_indicator(code):
-    filename = code + '_finance.csv'
+    filename = './stocks/' + code + '_finance.csv'
     if not os.path.exists(filename):
         end_date = datetime.strftime(datetime.now(), '%Y%m%d')
         outputflag = True
@@ -81,9 +84,6 @@ if __name__ == '__main__':
         freq = 'D'
         start = sys.argv[1]
 
-    # df = ts.realtime_boxoffice()
-    # print(df)
-    # exit()
 
     # 新股数据
     # new_stock = ts_api.new_share(start_date='20200101', end_date='20200901')
@@ -101,52 +101,49 @@ if __name__ == '__main__':
     # print(stocks)
     # print(stocks['ts_code'], stocks['name'])
     # exit(0)
-    for i in range(0, len(stocks['ts_code'])):            # len(stocks['ts_code'])
-        code = stocks['ts_code'][i]
-        if code.find('60') == 0 or code.find('000') == 0:   # 主板股票
-            # print(code, stocks['name'][i])
-            file_name = './stocks/' + code
-            if os.path.exists(file_name):
-                os.remove(file_name)
+
+    with open('stocks.csv','w') as f:
+        f_csv = csv.writer(f)
+        for i in range(0, 80):            # len(stocks['ts_code'])
+            code = stocks['ts_code'][i]
             name = stocks['name'][i]
+            if (code.find('60') == 0 or code.find('002') == 0 or code.find('000') == 0) and name.find('ST') < 0 and code != '000029.SZ':   # 主板股票去除ST
+                # print(code, name)
+
+                # 更新财务数据
+                file_name = './stocks/' + code  + '_finance.csv'
+                if os.path.exists(file_name):
+                    os.remove(file_name)
+                fetch_finance_indicator(code)
+
+                # 更新股价
+                file_name = './stocks/' + code
+                if os.path.exists(file_name):
+                    os.remove(file_name)
+                fetch_kline_data(code, freq, start)
+
+                # 选股
+                select = Select(code = code, name = name, path='./stocks/')
+
+                if select.select() is True:
+                    rows = [(code, name)]
+                    f_csv.writerows(rows)
+                time.sleep(0.5)
+
+    # 技术面选股+可视化
+    csv_data = pd.read_csv('./stocks.csv', header=None)  # 读取数据
+    data = csv_data.values.tolist()
+    for i in data:
+        print(i)
+        code = i[0]
+        name = i[1]
+
+        file_name = './stocks/' + code
+        if os.path.exists(file_name):
+            os.remove(file_name)
             fetch_kline_data(code, freq, start)
-            # show = Show(code = code, name = name, freq = freq, path='./stocks/')
-            # show.show()
-
             cmd = './user/show.py ' + code + ' ' + name
-            # print(cmd)
             os.system(cmd)
-
-    # 通用数据
-    # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', start_date='20200228', end_date='20200228', asset='E', freq='5MIN', adj='qfq')
-    # print(pro_bar)
-    # exit(0)
-
-    # # 日线数据
-    # day = ts_api.daily(ts_code='603986.SH', start_date='20200901', end_date='20200902')
-    # print(day)
-
-    # # 周线数据
-    # week = ts_api.weekly(ts_code='603986.SH', start_date='20200801', end_date='20200902',
-    #                      fields='ts_code,trade_date,open,high,low,close,vol,amount')
-    # print(week)
-
-    # # 月线数据
-    # month = ts_api.monthly(ts_code='603986.SH', start_date='20200101', end_date='20200902',
-    #                       fields='ts_code,trade_date,open,high,low,close,vol,amount')
-    # print(month)
-
-    # # 利润表
-    # income = ts_api.income(ts_code='603986.SH', start_date='20200101', end_date='20200901')
-    # print(income)
-
-    # # 资产负债表
-    # balancesheet = ts_api.balancesheet(ts_code='603986.SH', start_date='20200101', end_date='20200901')
-    # print(balancesheet)
-
-    # # 现金流量表
-    # cashflow = ts_api.cashflow(ts_code='600000.SH', start_date='20190101', end_date='20190901')
-    # print(cashflow)
 
     # # 业务预告
     # forecast = ts_api.forecast(ann_date='20190131',

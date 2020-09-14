@@ -6,7 +6,7 @@ import signal
 import time
 from datetime import datetime
 from datetime import timedelta
-import cv2 as cv
+# import cv2 as cv
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt   # 导入模块 matplotlib.pyplot，并简写成 plt
@@ -144,7 +144,7 @@ class Show(object):
         ma5 = self.get_average(ys, 5)
         ma10 = self.get_average(ys, 10)
         ma20 = self.get_average(ys, 20)
-        ma60 = self.get_average(ys, 60)
+        # ma60 = self.get_average(ys, 60)
 
         pre_rush = False
         rush = False
@@ -158,15 +158,15 @@ class Show(object):
                 if pre_rush == False:
                     pre_rush = True
                     code = self.code + ':'
-                    if (xs[-1] - xs[i]).days < 5:
-                        print(code, xs[i], 'pre_rush!')
+                    if (xs[-1] - xs[i]).days < 3:
+                        print(code, self.name, xs[i], 'pre_rush!')
                 if ma10[i] >= ma20[i]:
                     if rush == False:
                         rush = True
                         code = self.code + ':'
                         plt.scatter(xs[i], ys[i], s=50, color='red')      # s 为点的 size
-                        if (xs[-1] - xs[i]).days <= 1:
-                            print(code, xs[i], 'rush!!!')
+                        if (xs[-1] - xs[i]).days < 2:
+                            print(code, self.name, xs[i], 'rush!!!')
                             ret = True
 
             if ma10[i] < ma20[i]:
