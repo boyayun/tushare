@@ -5,6 +5,7 @@ import sys
 import signal
 import time
 from datetime import datetime
+from datetime import timedelta
 import cv2 as cv
 import pandas as pd
 import matplotlib as mpl
@@ -151,20 +152,22 @@ class Show(object):
         run = False
 
         ret = False
-        for i in range(len(ys)-5, len(ys)):
+        for i in range(0, len(ys)):
             # rush
             if ma5[i] >= ma10[i]:
                 if pre_rush == False:
                     pre_rush = True
                     code = self.code + ':'
-                    print(code, xs[i], 'pre_rush!')
+                    if (xs[-1] - xs[i]).days < 5:
+                        print(code, xs[i], 'pre_rush!')
                 if ma10[i] >= ma20[i]:
                     if rush == False:
                         rush = True
                         code = self.code + ':'
                         plt.scatter(xs[i], ys[i], s=50, color='red')      # s 为点的 size
-                        print(code, xs[i], 'rush!!!')
-                        ret = True
+                        if (xs[-1] - xs[i]).days <= 1:
+                            print(code, xs[i], 'rush!!!')
+                            ret = True
 
             if ma10[i] < ma20[i]:
                 rush = False

@@ -98,20 +98,24 @@ if __name__ == '__main__':
 
     # 股票列表
     stocks = ts_api.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+    # print(stocks)
     # print(stocks['ts_code'], stocks['name'])
+    # exit(0)
     for i in range(0, len(stocks['ts_code'])):            # len(stocks['ts_code'])
         code = stocks['ts_code'][i]
-        file_name = './stocks/' + code
-        if os.path.exists(file_name):
-            os.remove(file_name)
-        name = stocks['name'][i]
-        fetch_kline_data(code, freq, start)
-        # show = Show(code = code, name = name, freq = freq, path='./stocks/')
-        # show.show()
+        if code.find('60') == 0 or code.find('000') == 0:   # 主板股票
+            # print(code, stocks['name'][i])
+            file_name = './stocks/' + code
+            if os.path.exists(file_name):
+                os.remove(file_name)
+            name = stocks['name'][i]
+            fetch_kline_data(code, freq, start)
+            # show = Show(code = code, name = name, freq = freq, path='./stocks/')
+            # show.show()
 
-        cmd = './user/show.py ' + code + ' ' + name
-        # print(cmd)
-        os.system(cmd)
+            cmd = './user/show.py ' + code + ' ' + name
+            # print(cmd)
+            os.system(cmd)
 
     # 通用数据
     # pro_bar = ts.pro_bar(api=ts_api, ts_code='603986.SH', start_date='20200228', end_date='20200228', asset='E', freq='5MIN', adj='qfq')
