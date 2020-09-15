@@ -84,18 +84,6 @@ if __name__ == '__main__':
         freq = 'D'
         start = sys.argv[1]
 
-
-    # 新股数据
-    # new_stock = ts_api.new_share(start_date='20200101', end_date='20200901')
-    # print(new_stock)
-
-    # file_name = './stocks/' + code
-    # if os.path.exists(file_name):
-    #     os.remove(file_name)
-    # fetch_kline_data(code, freq, start)
-    # show = Show(code = code,freq = freq, path='./stocks/', name='123')
-    # show.show()
-
     # 股票列表
     stocks = ts_api.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
     # print(stocks)
@@ -104,37 +92,45 @@ if __name__ == '__main__':
 
     with open('stocks.csv','w') as f:
         f_csv = csv.writer(f)
-        for i in range(0, 80):            # len(stocks['ts_code'])
+        for i in range(0, len(stocks['ts_code'])):            # len(stocks['ts_code'])
             code = stocks['ts_code'][i]
             name = stocks['name'][i]
-            if (code.find('60') == 0 or code.find('002') == 0 or code.find('000') == 0) and name.find('ST') < 0 and code != '000029.SZ':   # 主板股票去除ST
+            industry = stocks['industry'][i]
+            if (code.find('60') == 0 or code.find('002') == 0 or code.find('000') == 0) and name.find('ST') < 0:   # 主板股票去除ST
                 # print(code, name)
 
                 # 更新财务数据
                 file_name = './stocks/' + code  + '_finance.csv'
-                if os.path.exists(file_name):
-                    os.remove(file_name)
-                fetch_finance_indicator(code)
+                # if os.path.exists(file_name):
+                #     os.remove(file_name)
+
+                if not os.path.exists(file_name):
+                    # print(code, name)
+                    fetch_finance_indicator(code)
+                    time.sleep(1.2)
 
                 # 更新股价
                 file_name = './stocks/' + code
-                if os.path.exists(file_name):
-                    os.remove(file_name)
-                fetch_kline_data(code, freq, start)
+                # if os.path.exists(file_name):
+                #     os.remove(file_name)
+
+                if not os.path.exists(file_name):
+                    fetch_kline_data(code, 'D', start)
 
                 # 选股
-                select = Select(code = code, name = name, path='./stocks/')
-
-                if select.select() is True:
-                    rows = [(code, name)]
-                    f_csv.writerows(rows)
-                time.sleep(0.5)
+                if os.path.exists('./stocks/' + code) and os.path.exists('./stocks/' + code + '_finance.csv'):
+                    select = Select(code = code, name = name, path='./stocks/')
+                    if select.select() is True:
+                        # print(code, name)
+                        rows = [(code, name, industry)]
+                        f_csv.writerows(rows)
+                        f.flush()
 
     # 技术面选股+可视化
     csv_data = pd.read_csv('./stocks.csv', header=None)  # 读取数据
     data = csv_data.values.tolist()
     for i in data:
-        print(i)
+        # print(i)
         code = i[0]
         name = i[1]
 

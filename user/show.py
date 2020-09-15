@@ -141,9 +141,9 @@ class Show(object):
         return average
 
     def average_line(self, xs, ys):
-        ma5 = self.get_average(ys, 5)
-        ma10 = self.get_average(ys, 10)
-        ma20 = self.get_average(ys, 20)
+        ma5 = self.get_average(ys, 4)
+        ma10 = self.get_average(ys, 9)
+        ma20 = self.get_average(ys, 18)
         # ma60 = self.get_average(ys, 60)
 
         pre_rush = False
@@ -158,14 +158,14 @@ class Show(object):
                 if pre_rush == False:
                     pre_rush = True
                     code = self.code + ':'
-                    if (xs[-1] - xs[i]).days < 3:
+                    if (len(ys) - i - 1) < 5:
                         print(code, self.name, xs[i], 'pre_rush!')
                 if ma10[i] >= ma20[i]:
                     if rush == False:
                         rush = True
                         code = self.code + ':'
                         plt.scatter(xs[i], ys[i], s=50, color='red')      # s 为点的 size
-                        if (xs[-1] - xs[i]).days < 2:
+                        if (len(ys) - i - 1) < 1:
                             print(code, self.name, xs[i], 'rush!!!')
                             ret = True
 

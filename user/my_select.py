@@ -58,11 +58,22 @@ class Select(object):
         csv_data = pd.read_csv(self.path + self.file, usecols = ['netprofit_yoy'])
         self.netprofit_yoy = [i[0] for i in csv_data.values.tolist()]
 
+        # 每股经营活动产生的现金流量净额
+        csv_data = pd.read_csv(self.path + self.file, usecols = ['ocfps'])
+        self.ocfps = [i[0] for i in csv_data.values.tolist()]
+
+        # 营业收入同比增长率
+        csv_data = pd.read_csv(self.path + self.file, usecols = ['or_yoy'])
+        self.or_yoy = [i[0] for i in csv_data.values.tolist()]
+
     def signal_handler(self, signal, frame):
         sys.exit(0)
 
     def select(self):
         date = str(self.end_date[0])
+        if len(self.price) < 60:
+            print('次新股:', self.code, self.name)
+            return False
 
         f = 1
         if date.find('1231') >= 0:
@@ -74,30 +85,32 @@ class Select(object):
         elif date.find('0331') >= 0:
             f = 0.25
         else:
-            print('error')
+            print('error:', self.code, self.name, f)
             return False
 
-        pe = self.price[0]/self.eps[0]*f
-        pb = self.price[0]/self.bps[0]
-        roe = self.roe[0]/f
-
-        total = self.price[0]*(self.extra_item[0]+self.profit_dedt[0])/self.eps[0]
-        print(total)
-        print('pe:', pe)
-        print('pb:', pb)
-        print('roe:', roe)
-
-        if total < 20000000000 or pe > 100 or pb > 10 or roe < 10 or self.grossprofit_margin[0] < 20 or self.netprofit_yoy[0] < 0:
+        if self.eps[0] == 0 or self.bps[0] == 0:
+            print('error:', self.code, self.name)
             return False
+        pe = round(self.price[0]/self.eps[0]*f, 2)
+        pb = round(self.price[0]/self.bps[0], 2)
+        roe = round(self.roe[0]/f, 2)
 
-        # for i in range(0, len(self.eps)):
-        #     print('date:', self.eps[i][0])
-        #     date = self.eps[i][0]
+        #  单位(万)
+        total = round(self.price[0]*(self.extra_item[0]+self.profit_dedt[0])/self.eps[0]/10000,2)
 
+        ratio_cfps_eps = round(self.ocfps[0] / self.eps[0], 2)
 
-        #     # print('bps:', i[1])
-        #     # print('roe:', i[2])
-        return True
+        if total > 1000000 and pb < 10 and roe > 20 and self.grossprofit_margin[0] > 30 and ratio_cfps_eps > 0.75 and self.or_yoy[0] > 10:
+            print(self.code, self.name, end=': ')
+            print('total:', total,end='; ')
+            print('pe:', pe, end='; ')
+            print('pb:', pb,end='; ')
+            print('roe:', roe,end='; ')
+            print('grossprofit_margin:', round(self.grossprofit_margin[0], 2), end='; ')
+            print('ratio_cfps_eps:', ratio_cfps_eps)
+            return True
+
+        return False
 
 if __name__ == "__main__":
     csv_file = sys.argv[1]
