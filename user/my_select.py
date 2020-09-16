@@ -8,9 +8,85 @@ from datetime import datetime
 from datetime import timedelta
 import pandas as pd
 import numpy as np                # 导入模块 numpy，并简写成 np
+import heapq
+
+l = {}
+
+def get_stocks():
+    stocks = []
+    for key, value in l.items():
+        if len(value) < 5:
+            # print(key, len(value))
+            continue
+        total_score = []
+        all_code = []
+        all_name = []
+
+        all_pe = []
+        all_pb = []
+        all_roe = []
+        all_grossprofit_margin = []
+        all_ratio_cfps_eps = []
+        all_or_yoy = []
+        for v in value:
+            all_pe.append(v['pe'])
+            all_code.append(v['code'])
+            all_name.append(v['name'])
+            all_pb.append(v['pb'])
+            all_roe.append(v['roe'])
+            all_grossprofit_margin.append(v['grossprofit_margin'])
+            all_ratio_cfps_eps.append(v['ratio_cfps_eps'])
+            all_or_yoy.append(v['or_yoy'])
+
+        # print(all_name)
+        average_pe = np.mean(all_pe)
+        if average_pe >= -1 and average_pe <= 1:
+            average_pe = 1
+        average_pb = np.mean(all_pb)
+        if average_pb >= -1 and average_pb <= 1:
+            average_pb = 1
+        average_roe = np.mean(all_roe)
+        if average_roe >= -1 and average_roe <= 1:
+            average_roe = 1
+        average_grossprofit_margin = np.mean(all_grossprofit_margin)
+        if average_grossprofit_margin >= -1 and average_grossprofit_margin <= 1:
+            average_grossprofit_margin = 1
+        average_ratio_cfps_eps = np.mean(all_ratio_cfps_eps)
+        if average_ratio_cfps_eps >= -1 and average_ratio_cfps_eps <= 1:
+            average_ratio_cfps_eps = 1
+        average_or_yoy = np.mean(all_or_yoy)
+        if average_or_yoy >= -1 and average_or_yoy <= 1:
+            average_or_yoy = 1
+
+        # print(average_pe, average_pb, average_roe, average_grossprofit_margin, average_ratio_cfps_eps, average_or_yoy)
+
+        for v in value:
+            score = (average_pb - v['pb'])/abs(average_pb)
+            score += (v['roe'] - average_roe)/abs(average_roe)
+            score += (v['grossprofit_margin'] - average_grossprofit_margin)/abs(average_grossprofit_margin)
+            score += (v['ratio_cfps_eps'] - average_ratio_cfps_eps)/abs(average_ratio_cfps_eps)
+            score += (v['or_yoy'] - average_or_yoy)/abs(average_or_yoy)
+            total_score.append(round(score,2))
+
+        number = int(len(total_score)/10)+1
+        re1 = map(total_score.index, heapq.nlargest(number, total_score)) #求最大的三个索引    nsmallest与nlargest相反，求最小
+        # print(key, total_score)
+        # print(key, all_pb)
+        # print(key, all_roe)
+        # print(key, all_grossprofit_margin)
+        # print(key, all_ratio_cfps_eps)
+        # print(key, all_or_yoy)
+        temp = list(re1)
+        # print(temp)
+        for i in temp:
+            # print(i)
+            # print(all_code[i], all_name[i], all_pe[i], all_pb[i], all_roe[i], all_grossprofit_margin[i], all_ratio_cfps_eps[i], all_or_yoy[i])
+            stocks.append([all_code[i], all_name[i],key, all_pe[i], all_pb[i], all_roe[i], all_grossprofit_margin[i], all_ratio_cfps_eps[i], all_or_yoy[i]])
+
+    return stocks
 
 class Select(object):
-    def __init__(self, data=None, code='', path='./stocks/', name = ''):
+    def __init__(self, data=None, code='', path='./stocks/', industry='', name = ''):
         signal.signal(signal.SIGINT, self.signal_handler)
         if path == '':
             self.path = './'
@@ -19,6 +95,7 @@ class Select(object):
 
         self.name = name
         self.code = code
+        self.industry = industry
         self.file = code + '_finance.csv'
 
         # 日线价格
@@ -70,6 +147,7 @@ class Select(object):
         sys.exit(0)
 
     def select(self):
+        # global l
         date = str(self.end_date[0])
         if len(self.price) < 60:
             print('次新股:', self.code, self.name)
@@ -97,20 +175,37 @@ class Select(object):
 
         #  单位(万)
         total = round(self.price[0]*(self.extra_item[0]+self.profit_dedt[0])/self.eps[0]/10000,2)
+        if total < 1000000:
+            # print('市值小于100亿:', self.code, self.name, total)
+            return False
 
         ratio_cfps_eps = round(self.ocfps[0] / self.eps[0], 2)
 
-        if total > 1000000 and pb < 10 and roe > 20 and self.grossprofit_margin[0] > 30 and ratio_cfps_eps > 0.75 and self.or_yoy[0] > 10:
-            print(self.code, self.name, end=': ')
-            print('total:', total,end='; ')
-            print('pe:', pe, end='; ')
-            print('pb:', pb,end='; ')
-            print('roe:', roe,end='; ')
-            print('grossprofit_margin:', round(self.grossprofit_margin[0], 2), end='; ')
-            print('ratio_cfps_eps:', ratio_cfps_eps)
-            return True
+        if self.industry not in l.keys():
+            l[self.industry] = []
+        all_data = {}
+        all_data['code'] = self.code
+        all_data['name'] = self.name
+        all_data['pe'] = pe
+        all_data['pb'] = pb
+        all_data['roe'] = roe
+        all_data['grossprofit_margin'] = round(self.grossprofit_margin[0],2)
+        all_data['ratio_cfps_eps'] = ratio_cfps_eps
+        all_data['or_yoy'] = round(self.or_yoy[0],2)
 
-        return False
+        l[self.industry].append(all_data)
+
+        # print(l)
+
+        # if total > 1000000 and pb < 10 and roe > 20 and self.grossprofit_margin[0] > 30 and ratio_cfps_eps > 0.75 and self.or_yoy[0] > 10:
+        #     print(self.code, self.name, end=': ')
+        #     print('total:', total,end='; ')
+        #     print('pe:', pe, end='; ')
+        #     print('pb:', pb,end='; ')
+        #     print('roe:', roe,end='; ')
+        #     print('grossprofit_margin:', round(self.grossprofit_margin[0], 2), end='; ')
+        #     print('ratio_cfps_eps:', ratio_cfps_eps)
+        #     return True
 
 if __name__ == "__main__":
     csv_file = sys.argv[1]

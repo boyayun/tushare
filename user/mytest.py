@@ -10,6 +10,7 @@ from datetime import datetime
 import tushare.stock as stock
 from show import Show
 from my_select import Select
+import my_select
 import pandas
 import signal
 import csv
@@ -111,20 +112,20 @@ if __name__ == '__main__':
 
                 # 更新股价
                 file_name = './stocks/' + code
-                # if os.path.exists(file_name):
-                #     os.remove(file_name)
+                if os.path.exists(file_name):
+                    os.remove(file_name)
 
                 if not os.path.exists(file_name):
                     fetch_kline_data(code, 'D', start)
 
                 # 选股
                 if os.path.exists('./stocks/' + code) and os.path.exists('./stocks/' + code + '_finance.csv'):
-                    select = Select(code = code, name = name, path='./stocks/')
-                    if select.select() is True:
-                        # print(code, name)
-                        rows = [(code, name, industry)]
-                        f_csv.writerows(rows)
-                        f.flush()
+                    select = Select(code = code, name = name, industry=industry, path='./stocks/')
+                    select.select()
+        stocks = my_select.get_stocks()
+        # print(stocks)
+        f_csv.writerows(stocks)
+        f.flush()
 
     # 技术面选股+可视化
     csv_data = pd.read_csv('./stocks.csv', header=None)  # 读取数据
