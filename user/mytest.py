@@ -102,9 +102,6 @@ if __name__ == '__main__':
 
                 # 更新财务数据
                 file_name = './stocks/' + code  + '_finance.csv'
-                # if os.path.exists(file_name):
-                #     os.remove(file_name)
-
                 if not os.path.exists(file_name):
                     # print(code, name)
                     fetch_finance_indicator(code)
@@ -112,11 +109,9 @@ if __name__ == '__main__':
 
                 # 更新股价
                 file_name = './stocks/' + code
-                if os.path.exists(file_name):
-                    os.remove(file_name)
-
                 if not os.path.exists(file_name):
                     fetch_kline_data(code, 'D', start)
+                    time.sleep(0.1)
 
                 # 选股
                 if os.path.exists('./stocks/' + code) and os.path.exists('./stocks/' + code + '_finance.csv'):
