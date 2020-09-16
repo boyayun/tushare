@@ -16,7 +16,7 @@ import signal
 import csv
 
 def fetch_kline_data(code, freq, start):
-    filename = './stocks/' + code
+    filename = './stocks/' + code + '_price_' + freq + '.csv'
     # if not os.path.exists(filename):
     end_date = datetime.strftime(datetime.now(), '%Y%m%d')#获取当前时间
     outputflag = True
@@ -77,18 +77,19 @@ if __name__ == '__main__':
         freq = sys.argv[2]
         start = sys.argv[1]
     elif len(sys.argv) == 3:
-        code = '603986.SH'
         freq = sys.argv[2]
         start = sys.argv[1]
     elif len(sys.argv) == 2:
-        code = '603986.SH'
-        freq = 'D'
         start = sys.argv[1]
 
     # 股票列表
     stocks = ts_api.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-    # print(stocks)
-    # print(stocks['ts_code'], stocks['name'])
+    # for i in range(0, len(stocks['ts_code'])):            # len(stocks['ts_code'])
+    #     code = stocks['ts_code'][i]
+    #     name = stocks['name'][i]
+    #     industry = stocks['industry'][i]
+    #     if industry == '汽车整车':
+    #         print(code, name, industry)
     # exit(0)
 
     with open('stocks.csv','w') as f:
@@ -101,21 +102,27 @@ if __name__ == '__main__':
                 # print(code, name)
 
                 # 更新财务数据
-                file_name = './stocks/' + code  + '_finance.csv'
-                if not os.path.exists(file_name):
+                finance_name = './stocks/' + code  + '_finance.csv'
+                if not os.path.exists(finance_name):
                     # print(code, name)
                     fetch_finance_indicator(code)
                     time.sleep(1.2)
 
                 # 更新股价
-                file_name = './stocks/' + code
-                if not os.path.exists(file_name):
-                    fetch_kline_data(code, 'D', start)
+                price_name = './stocks/' + code + '_price_' + freq + '.csv'
+                if not os.path.exists(price_name):
+                    fetch_kline_data(code, freq, start)
+                    if os.path.exists(price_name):
+                        df = pd.read_csv(price_name, header=None)  # 读取数据
+                        cols = list(df)
+                        cols.insert(3,cols.pop(cols.index(6)))
+                        df = df.loc[:,cols]
+                        df.to_csv(price_name,header=None)
                     time.sleep(0.1)
 
                 # 选股
-                if os.path.exists('./stocks/' + code) and os.path.exists('./stocks/' + code + '_finance.csv'):
-                    select = Select(code = code, name = name, industry=industry, path='./stocks/')
+                if os.path.exists(finance_name) and os.path.exists(price_name):
+                    select = Select(code = code, name = name, industry=industry, path='./stocks/', freq=freq)
                     select.select()
         stocks = my_select.get_stocks()
         # print(stocks)
@@ -123,19 +130,21 @@ if __name__ == '__main__':
         f.flush()
 
     # 技术面选股+可视化
-    csv_data = pd.read_csv('./stocks.csv', header=None)  # 读取数据
-    data = csv_data.values.tolist()
-    for i in data:
-        # print(i)
-        code = i[0]
-        name = i[1]
+    if os.path.exists('./stocks.csv'):
+        csv_data = pd.read_csv('./stocks.csv', header=None)  # 读取数据
+        data = csv_data.values.tolist()
+        for i in data:
+            # print(i)
+            code = i[0]
+            name = i[1]
 
-        file_name = './stocks/' + code
-        if os.path.exists(file_name):
-            os.remove(file_name)
-            fetch_kline_data(code, freq, start)
-            cmd = './user/show.py ' + code + ' ' + name
-            os.system(cmd)
+            file_name = './stocks/' + code + '_price_' + freq + '.csv'
+            if os.path.exists(file_name):
+                os.remove(file_name)
+                fetch_kline_data(code, freq, start)
+                cmd = './user/show.py ' + code + ' ' + name + ' ' + freq
+                # print(cmd)
+                os.system(cmd)
 
     # # 业务预告
     # forecast = ts_api.forecast(ann_date='20190131',

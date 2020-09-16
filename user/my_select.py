@@ -15,20 +15,23 @@ l = {}
 def get_stocks():
     stocks = []
     for key, value in l.items():
-        if len(value) < 5:
+        if len(value) < 3:
             # print(key, len(value))
             continue
         total_score = []
         all_code = []
         all_name = []
 
+        all_total = []
         all_pe = []
         all_pb = []
         all_roe = []
         all_grossprofit_margin = []
         all_ratio_cfps_eps = []
         all_or_yoy = []
+        all_netprofit_yoy = []
         for v in value:
+            all_total.append(v['total'])
             all_pe.append(v['pe'])
             all_code.append(v['code'])
             all_name.append(v['name'])
@@ -37,6 +40,7 @@ def get_stocks():
             all_grossprofit_margin.append(v['grossprofit_margin'])
             all_ratio_cfps_eps.append(v['ratio_cfps_eps'])
             all_or_yoy.append(v['or_yoy'])
+            all_netprofit_yoy.append(v['netprofit_yoy'])
 
         # print(all_name)
         average_pe = np.mean(all_pe)
@@ -57,6 +61,9 @@ def get_stocks():
         average_or_yoy = np.mean(all_or_yoy)
         if average_or_yoy >= -1 and average_or_yoy <= 1:
             average_or_yoy = 1
+        average_netprofit_yoy = np.mean(all_netprofit_yoy)
+        if average_netprofit_yoy >= -1 and average_netprofit_yoy <= 1:
+            average_netprofit_yoy = 1
 
         # print(average_pe, average_pb, average_roe, average_grossprofit_margin, average_ratio_cfps_eps, average_or_yoy)
 
@@ -65,7 +72,8 @@ def get_stocks():
             score += (v['roe'] - average_roe)/abs(average_roe)
             score += (v['grossprofit_margin'] - average_grossprofit_margin)/abs(average_grossprofit_margin)
             score += (v['ratio_cfps_eps'] - average_ratio_cfps_eps)/abs(average_ratio_cfps_eps)
-            score += (v['or_yoy'] - average_or_yoy)/abs(average_or_yoy)
+            score += (v['or_yoy'] - average_or_yoy)/abs(average_or_yoy)*0.5
+            # score += (v['netprofit_yoy'] - average_netprofit_yoy)/abs(average_netprofit_yoy)*0.5
             total_score.append(round(score,2))
 
         number = int(len(total_score)/10)+1
@@ -81,12 +89,14 @@ def get_stocks():
         for i in temp:
             # print(i)
             # print(all_code[i], all_name[i], all_pe[i], all_pb[i], all_roe[i], all_grossprofit_margin[i], all_ratio_cfps_eps[i], all_or_yoy[i])
-            stocks.append([all_code[i], all_name[i],key, all_pe[i], all_pb[i], all_roe[i], all_grossprofit_margin[i], all_ratio_cfps_eps[i], all_or_yoy[i]])
+            if all_total[i] > 1000000:
+                stocks.append([all_code[i], all_name[i], key, len(value), round(all_total[i], 2), round(all_pe[i], 2), round(all_pb[i], 2), round(all_roe[i], 2),
+                round(all_grossprofit_margin[i], 2), round(all_ratio_cfps_eps[i], 2), round(all_or_yoy[i], 2), round(all_netprofit_yoy[i], 2)])
 
     return stocks
 
 class Select(object):
-    def __init__(self, data=None, code='', path='./stocks/', industry='', name = ''):
+    def __init__(self, data=None, code='', path='./stocks/', industry='Unknown', name = '', freq = 'D'):
         signal.signal(signal.SIGINT, self.signal_handler)
         if path == '':
             self.path = './'
@@ -97,9 +107,10 @@ class Select(object):
         self.code = code
         self.industry = industry
         self.file = code + '_finance.csv'
+        self.freq = freq
 
         # 日线价格
-        csv_data = pd.read_csv(self.path + self.code, usecols = [6])  # 读取数据
+        csv_data = pd.read_csv(self.path + self.code + '_price_' + freq + '.csv', usecols = [3])  # 读取数据
         self.price = [i[0] for i in csv_data.values.tolist()]
         # print(self.price)
 
@@ -147,12 +158,16 @@ class Select(object):
         sys.exit(0)
 
     def select(self):
-        # global l
-        date = str(self.end_date[0])
-        if len(self.price) < 60:
-            print('次新股:', self.code, self.name)
-            return False
+        if self.freq == 'D':
+            if len(self.price) < 60:
+                # print('次新股:', self.code, self.name)
+                return False
+        elif self.freq == 'W':
+            if len(self.price) < 12:
+                # print('次新股:', self.code, self.name)
+                return False
 
+        date = str(self.end_date[0])
         f = 1
         if date.find('1231') >= 0:
             f = 1
@@ -163,11 +178,11 @@ class Select(object):
         elif date.find('0331') >= 0:
             f = 0.25
         else:
-            print('error:', self.code, self.name, f)
+            # print('error:', self.code, self.name, f)
             return False
 
-        if self.eps[0] == 0 or self.bps[0] == 0:
-            print('error:', self.code, self.name)
+        if self.eps[0] <= 0 or self.bps[0] == 0:
+            # print('error:', self.code, self.name)
             return False
         pe = self.price[0]/self.eps[0]*f
         pb = self.price[0]/self.bps[0]
@@ -175,12 +190,14 @@ class Select(object):
 
         #  单位(万)
         total = self.price[0]*(self.extra_item[0]+self.profit_dedt[0])/self.eps[0]/10000
-        if total < 1000000:
+        # if total < 1000000:
             # print('市值小于100亿:', self.code, self.name, total)
-            return False
+            # return False
 
         ratio_cfps_eps = self.ocfps[0] / self.eps[0]
 
+        # if self.grossprofit_margin[0] < 0 or self.ocfps[0] or self.or_yoy[0] < 0 or self.netprofit_yoy[0] < 0:
+        #     return False
         if self.industry not in l.keys():
             l[self.industry] = []
         all_data = {}
@@ -192,31 +209,39 @@ class Select(object):
         all_data['grossprofit_margin'] = self.grossprofit_margin[0]
         all_data['ratio_cfps_eps'] = ratio_cfps_eps
         all_data['or_yoy'] = self.or_yoy[0]
+        all_data['netprofit_yoy'] = self.netprofit_yoy[0]
+        all_data['total'] = total
 
         l[self.industry].append(all_data)
 
         # print(l)
 
         # if total > 1000000 and pb < 10 and roe > 20 and self.grossprofit_margin[0] > 30 and ratio_cfps_eps > 0.75 and self.or_yoy[0] > 10:
-        #     print(self.code, self.name, end=': ')
-        #     print('total:', total,end='; ')
-        #     print('pe:', pe, end='; ')
-        #     print('pb:', pb,end='; ')
-        #     print('roe:', roe,end='; ')
-        #     print('grossprofit_margin:', round(self.grossprofit_margin[0], 2), end='; ')
-        #     print('ratio_cfps_eps:', ratio_cfps_eps)
-        #     return True
+        # print(self.code, self.name, end=': ')
+        # print('total:', total,end='; ')
+        # print('pe:', pe, end='; ')
+        # print('pb:', pb,end='; ')
+        # print('roe:', roe,end='; ')
+        # print('grossprofit_margin:', round(self.grossprofit_margin[0], 2), end='; ')
+        # print('ratio_cfps_eps:', ratio_cfps_eps)
+        return True
 
 if __name__ == "__main__":
-    csv_file = sys.argv[1]
+    code = sys.argv[1]
+    freq = 'D'
     name = ''
     path = './stocks/'
 
-    if len(sys.argv) == 4:
-        path = sys.argv[3]
+    if len(sys.argv) == 5:
+        path = sys.argv[4]
+        freq = sys.argv[3]
+        name = sys.argv[2]
+    elif len(sys.argv) == 4:
+        freq = sys.argv[3]
         name = sys.argv[2]
     elif len(sys.argv) == 3:
         name = sys.argv[2]
 
-    select = Select(code = csv_file, name = name, path=path)
-    print(select.select())
+    select = Select(code = code, name = name, path=path, freq=freq)
+    select.select()
+    print(get_stocks())

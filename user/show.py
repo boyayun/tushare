@@ -28,11 +28,7 @@ class Show(object):
 
         self.name = name
         self.code = code
-        date = 2
-        close = 6
-        if freq != 'D':
-            close = 3
-        csv_data = pd.read_csv(self.path + self.code, usecols=[date, close], header=None)  # 读取数据
+        csv_data = pd.read_csv(self.path + self.code + '_price_' + freq + '.csv', usecols=[2, 3], header=None)  # 读取数据
         self.data = csv_data.values.tolist()
         self.freq = freq
 
@@ -140,6 +136,14 @@ class Show(object):
             average.append(np.mean(p))
         return average
 
+    # def amount_price(self, xs, ys):
+    #     for i in range(4, len(ys)):
+    #         if(ys[i-3] < ys[i-4]):
+    #             if(ys[i-2] < ys[i-3]) and True:
+    #                 if(ys[i-1] < ys[i-2]) and True:
+    #                     if(ys[i] > ys[i-1]) and True:
+
+
     def average_line(self, xs, ys):
         ma5 = self.get_average(ys, 4)
         ma10 = self.get_average(ys, 9)
@@ -158,7 +162,7 @@ class Show(object):
                 if pre_rush == False:
                     pre_rush = True
                     code = self.code + ':'
-                    if (len(ys) - i - 1) < 5:
+                    if (len(ys) - i - 1) < 2:
                         print(code, self.name, xs[i], 'pre_rush!')
                 if ma10[i] >= ma20[i]:
                     if rush == False:
@@ -238,7 +242,7 @@ class Show(object):
         # plt.yticks([-2, 0, 2, 4, 6, 8, 10],
         #         ["-2m", "0m", "2m", "4m", "6m", "8m", "10m"])
         if flag is True:
-            plt.savefig(self.path + self.code + '_' + self.name+ '.png')
+            plt.savefig(self.path + self.code + '_' + self.name + '_' + self.freq + '.png')
 
         # plt.show(block=False)
         # while plt.waitforbuttonpress() == False:
