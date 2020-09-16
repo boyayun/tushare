@@ -169,17 +169,17 @@ class Select(object):
         if self.eps[0] == 0 or self.bps[0] == 0:
             print('error:', self.code, self.name)
             return False
-        pe = round(self.price[0]/self.eps[0]*f, 2)
-        pb = round(self.price[0]/self.bps[0], 2)
-        roe = round(self.roe[0]/f, 2)
+        pe = self.price[0]/self.eps[0]*f
+        pb = self.price[0]/self.bps[0]
+        roe = self.roe[0]/f
 
         #  单位(万)
-        total = round(self.price[0]*(self.extra_item[0]+self.profit_dedt[0])/self.eps[0]/10000,2)
+        total = self.price[0]*(self.extra_item[0]+self.profit_dedt[0])/self.eps[0]/10000
         if total < 1000000:
             # print('市值小于100亿:', self.code, self.name, total)
             return False
 
-        ratio_cfps_eps = round(self.ocfps[0] / self.eps[0], 2)
+        ratio_cfps_eps = self.ocfps[0] / self.eps[0]
 
         if self.industry not in l.keys():
             l[self.industry] = []
@@ -189,9 +189,9 @@ class Select(object):
         all_data['pe'] = pe
         all_data['pb'] = pb
         all_data['roe'] = roe
-        all_data['grossprofit_margin'] = round(self.grossprofit_margin[0],2)
+        all_data['grossprofit_margin'] = self.grossprofit_margin[0]
         all_data['ratio_cfps_eps'] = ratio_cfps_eps
-        all_data['or_yoy'] = round(self.or_yoy[0],2)
+        all_data['or_yoy'] = self.or_yoy[0]
 
         l[self.industry].append(all_data)
 
