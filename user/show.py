@@ -19,8 +19,6 @@ mpl.rcParams['axes.unicode_minus'] = False
 class Show(object):
     def __init__(self, data=None, code='', path='./stocks/', freq = 'D', name = ''):
         signal.signal(signal.SIGINT, self.signal_handler)
-        # print(data)
-        # print(path)
         if path == '':
             self.path = './'
         else:
