@@ -112,13 +112,17 @@ if __name__ == '__main__':
                 price_name = './stocks/' + code + '_price_' + freq + '.csv'
                 if not os.path.exists(price_name):
                     fetch_kline_data(code, freq, start)
-                    if os.path.exists(price_name):
-                        df = pd.read_csv(price_name, header=None)  # 读取数据
-                        cols = list(df)
-                        cols.insert(3,cols.pop(cols.index(6)))
-                        df = df.loc[:,cols]
-                        df.to_csv(price_name,header=None)
-                    time.sleep(0.1)
+                    if freq == 'D':
+                        if os.path.exists(price_name):
+                            df = pd.read_csv(price_name, header=None)  # 读取数据
+                            cols = list(df)
+                            cols.insert(3,cols.pop(cols.index(6)))
+                            cols.pop(cols.index(0))
+                            df = df.loc[:,cols]
+                            df.to_csv(price_name,header=None)
+                        time.sleep(0.1)
+                    else:
+                        time.sleep(0.4)
 
                 # 选股
                 if os.path.exists(finance_name) and os.path.exists(price_name):
@@ -140,8 +144,8 @@ if __name__ == '__main__':
 
             file_name = './stocks/' + code + '_price_' + freq + '.csv'
             if os.path.exists(file_name):
-                os.remove(file_name)
-                fetch_kline_data(code, freq, start)
+                # os.remove(file_name)
+                # fetch_kline_data(code, freq, start)
                 cmd = './user/show.py ' + code + ' ' + name + ' ' + freq
                 # print(cmd)
                 os.system(cmd)
