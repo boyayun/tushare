@@ -16,18 +16,16 @@ import numpy as np                # 导入模块 numpy，并简写成 np
 mpl.rcParams[u'font.sans-serif'] = ['simhei']
 mpl.rcParams['axes.unicode_minus'] = False
 
-mpl.use('Agg')
+
 class Show(object):
-    def __init__(self, data=None, code='', path='./stocks/', freq = 'D', name = ''):
-        signal.signal(signal.SIGINT, self.signal_handler)
-        if path == '':
             self.path = './'
         else:
             self.path = path + '/'
 
         self.name = name
         self.code = code
-        csv_data = pd.read_csv(self.path + self.code + '_price_' + freq + '.csv', usecols=[2, 3], header=None)  # 读取数据
+        csv_data = pd.read_csv(self.path + self.code + '_price_' +
+                               freq + '.csv', usecols=[2, 3], header=None)  # 读取数据
         self.data = csv_data.values.tolist()
         self.freq = freq
 
@@ -44,7 +42,7 @@ class Show(object):
         xs = [datetime.strptime(str(d)[0:-2], '%Y%m%d').date() for d in x]
         # print(xs)
         y = [i[1] for i in self.data]
-        y = [round(i,2) for i in y]
+        y = [round(i, 2) for i in y]
         y.reverse()
         # print(y)
         return xs, y
@@ -88,19 +86,24 @@ class Show(object):
     def draw_point(self, high_x, high_y, low_x, low_y):
         # 绘制散点(3, 6)
         for i in range(len(high_y)):
-            plt.scatter(high_x[i], high_y[i], s=25, color='red')      # s 为点的 size
-            plt.annotate(str(high_y[i]), color='red', xy=(high_x[i], high_y[i]+0.003*high_y[i]), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
+            plt.scatter(high_x[i], high_y[i], s=25,
+                        color='red')      # s 为点的 size
+            plt.annotate(str(high_y[i]), color='red', xy=(
+                high_x[i], high_y[i]+0.003*high_y[i]), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
 
         # 绘制散点(3, 6)
         for i in range(len(low_y)):
-            plt.scatter(low_x[i], low_y[i], s=25, color='green')      # s 为点的 size
-            plt.annotate(str(low_y[i]), color='green', xy=(low_x[i], low_y[i]-0.007*low_y[i]), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
+            plt.scatter(low_x[i], low_y[i], s=25,
+                        color='green')      # s 为点的 size
+            plt.annotate(str(low_y[i]), color='green', xy=(
+                low_x[i], low_y[i]-0.007*low_y[i]), fontsize=10, xycoords='data')      # 在(3.3, 5.5)上做标注
 
         # plt.text(3.3, 5, "this point very important",
         #     fontdict={'size': 12, 'color': 'green'})  # xycoords='data' 是说基于数据的值来选位置
 
     def draw_high_line(self, high_x, high_y):
-        plt.plot(high_x, high_y, color='red', linewidth=1.0, linestyle="--", label="y")
+        plt.plot(high_x, high_y, color='red',
+                 linewidth=1.0, linestyle="--", label="y")
         x = high_x
         y = high_y
         linewidth = 1.0
@@ -109,10 +112,12 @@ class Show(object):
             x = high_x
             y = high_y
             linewidth += 0.75
-            plt.plot(x, y, color='red', linewidth=linewidth, linestyle="--", label="y")
+            plt.plot(x, y, color='red', linewidth=linewidth,
+                     linestyle="--", label="y")
 
     def draw_low_line(self, low_x, low_y):
-        plt.plot(low_x, low_y, color='green', linewidth=1.0, linestyle="--", label="y")
+        plt.plot(low_x, low_y, color='green',
+                 linewidth=1.0, linestyle="--", label="y")
         x = low_x
         y = low_y
         linewidth = 1.0
@@ -121,7 +126,8 @@ class Show(object):
             x = low_x
             y = low_y
             linewidth += 0.75
-            plt.plot(x, y, color='green', linewidth=linewidth, linestyle="--", label="y")
+            plt.plot(x, y, color='green', linewidth=linewidth,
+                     linestyle="--", label="y")
 
     def get_average(self, price, number):
         average = []
@@ -129,7 +135,7 @@ class Show(object):
         for i in range(len(price)):
             if i < number:
                 index = 0
-            else :
+            else:
                 index = i-(number-1)
             p = price[index:i+1]
             average.append(np.mean(p))
@@ -141,7 +147,6 @@ class Show(object):
     #             if(ys[i-2] < ys[i-3]) and True:
     #                 if(ys[i-1] < ys[i-2]) and True:
     #                     if(ys[i] > ys[i-1]) and True:
-
 
     def average_line(self, xs, ys):
         ma4 = self.get_average(ys, 4)
@@ -184,7 +189,8 @@ class Show(object):
                     if rush == False:
                         rush = True
                         code = self.code + ':'
-                        plt.scatter(xs[i], ys[i], s=50, color='red')      # s 为点的 size
+                        plt.scatter(xs[i], ys[i], s=50,
+                                    color='red')      # s 为点的 size
                         if (len(ys) - i - 1) < 1:
                             print(code, self.name, xs[i], 'rush!!!')
                             ret = True
@@ -234,8 +240,9 @@ class Show(object):
         # self.draw_high_line(high_x, high_y)
         # self.draw_low_line(low_x, low_y)
 
-        plt.plot(xs, ys, color='blue', linewidth=1.0, linestyle="-", label="price")
-        plt.legend(loc='upper left',ncol=2)   # 图例
+        plt.plot(xs, ys, color='blue', linewidth=1.0,
+                 linestyle="-", label="price")
+        plt.legend(loc='upper left', ncol=2)   # 图例
 
         # 设置横轴的上下限
         # plt.xlim(20160818, 20200901)
@@ -250,19 +257,21 @@ class Show(object):
         # 设置纵轴精准刻度
         # plt.yticks([-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         # 设置横轴精准刻度
-        xticks=list(range(0,len(xs),5))
-        xlabels=[xs[x] for x in xticks]
+        xticks = list(range(0, len(xs), 5))
+        xlabels = [xs[x] for x in xticks]
         xlabels.append(xs[-1])
-        plt.xticks(xlabels, rotation = -90)
+        plt.xticks(xlabels, rotation=-90)
         # # 设置纵轴精准刻度
         # plt.yticks([-2, 0, 2, 4, 6, 8, 10],
         #         ["-2m", "0m", "2m", "4m", "6m", "8m", "10m"])
         if flag is True:
-            plt.savefig(self.path + self.code + '_' + self.name + '_' + self.freq + '.png')
+            plt.savefig(self.path + self.code + '_' +
+                        self.name + '_' + self.freq + '.png')
 
         # plt.show(block=False)
         # while plt.waitforbuttonpress() == False:
         #     time.sleep(0.1)
+
 
 if __name__ == "__main__":
     csv_file = sys.argv[1]
@@ -280,7 +289,5 @@ if __name__ == "__main__":
     elif len(sys.argv) == 3:
         name = sys.argv[2]
 
-    show = Show(code = csv_file, name = name, freq=freq, path=path)
+    show = Show(code=csv_file, name=name, freq=freq, path=path)
     show.show()
-
-
