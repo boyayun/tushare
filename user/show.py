@@ -16,6 +16,7 @@ import numpy as np                # 导入模块 numpy，并简写成 np
 mpl.rcParams[u'font.sans-serif'] = ['simhei']
 mpl.rcParams['axes.unicode_minus'] = False
 
+mpl.use('Agg')
 class Show(object):
     def __init__(self, data=None, code='', path='./stocks/', freq = 'D', name = ''):
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -30,7 +31,7 @@ class Show(object):
         self.data = csv_data.values.tolist()
         self.freq = freq
 
-        self.colors = {'ma5':'gold', 'ma10':'pink', 'ma20': 'blueviolet', 'ma60':'cyan'}
+        self.colors = {'ma4':'gold', 'ma9':'pink', 'ma18': 'blueviolet', 'ma60':'cyan'}
 
     def signal_handler(self, signal, frame):
         sys.exit(0)
@@ -143,9 +144,9 @@ class Show(object):
 
 
     def average_line(self, xs, ys):
-        ma5 = self.get_average(ys, 4)
-        ma10 = self.get_average(ys, 9)
-        ma20 = self.get_average(ys, 18)
+        ma4 = self.get_average(ys, 4)
+        ma9 = self.get_average(ys, 9)
+        ma18 = self.get_average(ys, 18)
         # ma60 = self.get_average(ys, 60)
 
         pre_rush = False
@@ -156,13 +157,30 @@ class Show(object):
         ret = False
         for i in range(0, len(ys)):
             # rush
-            if ma5[i] >= ma10[i]:
+            x4_9 = 0
+            x9_18 = 0
+            k = 1
+            if(i == len(ys)-k) and ma4[i] < ma9[i]:
+                t8 = ma9[i]*9 - ys[i-(9-k)]
+                t3 = ma4[i]*4 - ys[i-(4-k)]
+                x4_9 = (4*t8 - 9*t3)/5
+                if x4_9 > ys[i] and x4_9 <= ys[i]*1.1:
+                    print(code, self.name, 'if price shoud rise %.2f%% to %.2f can pre_rush' % ((x4_9/ys[i]-1)*100, x4_9))
+
+            if ma4[i] >= ma9[i]:
+                if(i == len(ys)-k) and ma9[i] < ma18[i]:
+                    t8 = ma9[i]*9 - ys[i-(9-k)]
+                    t17 = ma18[i]*18 - ys[i-(18-k)]
+                    x9_18 = (9*t17 - 18*t8)/9
+                    if x9_18 > ys[i] and x9_18 <= ys[i]*1.1:
+                        print(code, self.name, 'if price shoud rise %.2f%% to %.2f can rush'%((x9_18/ys[i]-1)*100, x9_18))
+
                 if pre_rush == False:
                     pre_rush = True
                     code = self.code + ':'
                     if (len(ys) - i - 1) < 2:
                         print(code, self.name, xs[i], 'pre_rush!')
-                if ma10[i] >= ma20[i]:
+                if ma9[i] >= ma18[i]:
                     if rush == False:
                         rush = True
                         code = self.code + ':'
@@ -171,32 +189,32 @@ class Show(object):
                             print(code, self.name, xs[i], 'rush!!!')
                             ret = True
 
-            if ma10[i] < ma20[i]:
+            if ma9[i] < ma18[i]:
                 rush = False
-            if ma5[i] < ma10[i]:
+            if ma4[i] < ma9[i]:
                 if rush == False:
                     pre_rush = False
             # run
-            # if ma5[i] <= ma10[i]:
+            # if ma4[i] <= ma9[i]:
             #     if pre_run == False:
             #         pre_run = True
             #         code = self.code + ':'
             #         print(code, xs[i], 'pre_run!')
-            #     if ma10[i] <= ma20[i]:
+            #     if ma9[i] <= ma18[i]:
             #         if run == False:
             #             run = True
             #             code = self.code + ':'
             #             plt.scatter(xs[i], ys[i], s=50, color='green')      # s 为点的 size
             #             print(code, xs[i], 'run!!!')
 
-            # if ma10[i] > ma20[i]:
+            # if ma9[i] > ma18[i]:
             #     run = False
-            # if ma5[i] > ma10[i]:
+            # if ma4[i] > ma9[i]:
             #     if run == False:
             #         pre_run = False
-        plt.plot(xs, ma5, color=self.colors['ma5'], linewidth=1.5, linestyle="-", label='ma5')
-        plt.plot(xs, ma10, color=self.colors['ma10'], linewidth=1.5, linestyle="-", label='ma10')
-        plt.plot(xs, ma20, color=self.colors['ma20'], linewidth=1.5, linestyle="-", label='ma20')
+        plt.plot(xs, ma4, color=self.colors['ma4'], linewidth=1.5, linestyle="-", label='ma4')
+        plt.plot(xs, ma9, color=self.colors['ma9'], linewidth=1.5, linestyle="-", label='ma9')
+        plt.plot(xs, ma18, color=self.colors['ma18'], linewidth=1.5, linestyle="-", label='ma18')
         # plt.plot(xs, ma60, color=self.colors['ma60'], linewidth=1.5, linestyle="-", label='ma60')
         return ret
 
