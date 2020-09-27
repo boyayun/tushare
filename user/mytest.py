@@ -87,8 +87,8 @@ if __name__ == '__main__':
         start = sys.argv[1]
 
     # 股票列表
-    # stocks = ts_api.stock_basic(
-    #     exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+    stocks = ts_api.stock_basic(
+        exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
     # for i in range(0, len(stocks['ts_code'])):            # len(stocks['ts_code'])
     #     code = stocks['ts_code'][i]
     #     name = stocks['name'][i]
@@ -97,46 +97,48 @@ if __name__ == '__main__':
     #         print(code, name, industry)
     # exit(0)
 
-    # with open('stocks.csv','w') as f:
-    #     f_csv = csv.writer(f)
-    #     for i in range(0, len(stocks['ts_code'])):            # len(stocks['ts_code'])
-    #         code = stocks['ts_code'][i]
-    #         name = stocks['name'][i]
-    #         industry = stocks['industry'][i]
-    #         if (code.find('60') == 0 or code.find('002') == 0 or code.find('000') == 0) and name.find('ST') < 0:   # 主板股票去除ST
-    #             # print(code, name)
+    with open('stocks.csv', 'w') as f:
+        f_csv = csv.writer(f)
+        # len(stocks['ts_code'])
+        for i in range(0, len(stocks['ts_code'])):
+            code = stocks['ts_code'][i]
+            name = stocks['name'][i]
+            industry = stocks['industry'][i]
+            if (code.find('60') == 0 or code.find('002') == 0 or code.find('000') == 0) and name.find('ST') < 0:   # 主板股票去除ST
+                # print(code, name)
 
-    #             # 更新财务数据
-    #             finance_name = './stocks/' + code  + '_finance.csv'
-    #             if not os.path.exists(finance_name):
-    #                 # print(code, name)
-    #                 fetch_finance_indicator(code)
-    #                 time.sleep(1.2)
+                # 更新财务数据
+                finance_name = './stocks/' + code + '_finance.csv'
+                if not os.path.exists(finance_name):
+                    # print(code, name)
+                    fetch_finance_indicator(code)
+                    time.sleep(1.2)
 
-    #             # 更新股价
-    #             price_name = './stocks/' + code + '_price_' + freq + '.csv'
-    #             if not os.path.exists(price_name):
-    #                 fetch_kline_data(code, freq, start)
-    #                 if freq == 'D':
-    #                     if os.path.exists(price_name):
-    #                         df = pd.read_csv(price_name, header=None)  # 读取数据
-    #                         cols = list(df)
-    #                         cols.insert(3,cols.pop(cols.index(6)))
-    #                         cols.pop(cols.index(0))
-    #                         df = df.loc[:,cols]
-    #                         df.to_csv(price_name,header=None)
-    #                     time.sleep(0.1)
-    #                 else:
-    #                     time.sleep(0.4)
+                # 更新股价
+                price_name = './stocks/' + code + '_price_' + freq + '.csv'
+                if not os.path.exists(price_name):
+                    fetch_kline_data(code, freq, start)
+                    if freq == 'D':
+                        if os.path.exists(price_name):
+                            df = pd.read_csv(price_name, header=None)  # 读取数据
+                            cols = list(df)
+                            cols.insert(3, cols.pop(cols.index(6)))
+                            cols.pop(cols.index(0))
+                            df = df.loc[:, cols]
+                            df.to_csv(price_name, header=None)
+                        time.sleep(0.1)
+                    else:
+                        time.sleep(0.4)
 
-    #             # 选股
-    #             if os.path.exists(finance_name) and os.path.exists(price_name):
-    #                 select = Select(code = code, name = name, industry=industry, path='./stocks/', freq=freq)
-    #                 select.select()
-    #     stocks = my_select.get_stocks()
-    #     # print(stocks)
-    #     f_csv.writerows(stocks)
-    #     f.flush()
+                # 选股
+                if os.path.exists(finance_name) and os.path.exists(price_name):
+                    select = Select(
+                        code=code, name=name, industry=industry, path='./stocks/', freq=freq)
+                    select.select()
+        stocks = my_select.get_stocks()
+        # print(stocks)
+        f_csv.writerows(stocks)
+        f.flush()
 
     # 技术面选股+可视化
     if os.path.exists('./stocks.csv'):
