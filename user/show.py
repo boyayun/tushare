@@ -134,9 +134,9 @@ class Show(object):
             plt.plot(x, y, color='green', linewidth=linewidth,
                      linestyle="--", label="y")
 
-    # def amount_price(self, xs, ys):
+    # def amount_select(self, xs, ys):
     #     for i in range(4, len(ys)):
-    #         if(ys[i-3] < ys[i-4]):
+    #         if(ys[i-3] < ys[i-4]) and :
     #             if(ys[i-2] < ys[i-3]) and True:
     #                 if(ys[i-1] < ys[i-2]) and True:
     #                     if(ys[i] > ys[i-1]) and True:
@@ -166,7 +166,10 @@ class Show(object):
         down_smooth = self.get_smooth(down, number)
 
         for i in range(1, len(price)):
-            r = up_smooth[i]/(up_smooth[i]+down_smooth[i])*100
+            if up_smooth[i] == 0 and down_smooth[i] == 0:
+                r = rsi[i-1]
+            else:
+                r = up_smooth[i]/(up_smooth[i]+down_smooth[i])*100
             rsi.append(round(r, 2))
         return rsi
 
@@ -178,14 +181,8 @@ class Show(object):
         rsi24 = self.get_rsi(ys, 24)
 
         for i in range(0, len(ys)):
-            if (len(ys) - i - 1) < 5 and rsi6[i] < 20:
-                print(code, self.name, xs[i], 'rsi pre_rush!')
-            if rsi[len(ys)-1] < 20 and rsi[len(ys)-2] < 20 and rsi[len(ys)-3] < 20:
+            if (len(ys) - i - 1) < 5 and rsi6[i] > rsi12[i] and rsi6[i] < 30:
                 print(code, self.name, xs[i], 'rsi rush!')
-
-        # print(rsi6)
-        # print(rsi12)
-        # print(rsi24)
 
     def get_average(self, price, number):
         average = []
@@ -199,7 +196,7 @@ class Show(object):
             average.append(round(np.mean(p), 2))
         return average
 
-    def average_line(self, xs, ys):
+    def average_line_select(self, xs, ys):
         ma4 = self.get_average(ys, 4)
         ma9 = self.get_average(ys, 9)
         ma18 = self.get_average(ys, 18)
@@ -289,7 +286,8 @@ class Show(object):
 
         xs, ys = self.get_position()
 
-        flag = self.average_line(xs, ys)
+        flag = self.average_line_select(xs, ys)
+        self.rsi_select(xs, ys)
         high_x, high_y, low_x, low_y = self.get_point(xs, ys)
         self.draw_point(high_x, high_y, low_x, low_y)
         # self.draw_high_line(high_x, high_y)

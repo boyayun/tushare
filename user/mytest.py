@@ -150,8 +150,10 @@ if __name__ == '__main__':
             name = i[1]
 
             price_name = './stocks/' + code + '_price_' + freq + '.csv'
-            if not os.path.exists(price_name):
-                fetch_kline_data(code, freq, start)
+            if os.path.exists(price_name):
+                os.remove(price_name)
+
+            fetch_kline_data(code, freq, start)
             if os.path.exists(price_name):
                 if freq == 'D':
                     if os.path.exists(price_name):
