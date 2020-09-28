@@ -134,18 +134,6 @@ class Show(object):
             plt.plot(x, y, color='green', linewidth=linewidth,
                      linestyle="--", label="y")
 
-    def get_average(self, price, number):
-        average = []
-        index = 0
-        for i in range(len(price)):
-            if i < number:
-                index = 0
-            else:
-                index = i-(number-1)
-            p = price[index:i+1]
-            average.append(np.mean(p))
-        return average
-
     # def amount_price(self, xs, ys):
     #     for i in range(4, len(ys)):
     #         if(ys[i-3] < ys[i-4]):
@@ -198,6 +186,18 @@ class Show(object):
         # print(rsi6)
         # print(rsi12)
         # print(rsi24)
+
+    def get_average(self, price, number):
+        average = []
+        index = 0
+        for i in range(len(price)):
+            if i < number:
+                index = 0
+            else:
+                index = i-(number-1)
+            p = price[index:i+1]
+            average.append(round(np.mean(p), 2))
+        return average
 
     def average_line(self, xs, ys):
         ma4 = self.get_average(ys, 4)
