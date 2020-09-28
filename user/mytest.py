@@ -73,11 +73,11 @@ if __name__ == '__main__':
     # 初始化接口
     ts_api = ts.pro_api()
 
-    code = '603986.SH'
+    update = 0    # 0:不更新, 1:更新精选股的技术数据， 2:更新已选股的技术数据，3:更新所有股的财务数据
     freq = 'D'
     start = ''
     if len(sys.argv) == 4:
-        code = sys.argv[3]
+        update = sys.argv[3]
         freq = sys.argv[2]
         start = sys.argv[1]
     elif len(sys.argv) == 3:
@@ -85,6 +85,24 @@ if __name__ == '__main__':
         start = sys.argv[1]
     elif len(sys.argv) == 2:
         start = sys.argv[1]
+
+    if update == 3:
+        os.remove('./stocks/*')
+    elif update == 2:
+        files = './stocks/*_price_' + freq + '*'
+        os.remove(files)
+    elif update == 1:
+        if os.path.exists('./stocks.csv'):
+            csv_data = pd.read_csv('./stocks.csv', header=None)  # 读取数据
+            data = csv_data.values.tolist()
+            for i in data:
+                # print(i)
+                code = i[0]
+                name = i[1]
+
+                price_name = './stocks/' + code + '_price_' + freq + '.csv'
+                if os.path.exists(price_name):
+                    os.remove(price_name)
 
     # 股票列表
     stocks = ts_api.stock_basic(
@@ -148,22 +166,7 @@ if __name__ == '__main__':
             # print(i)
             code = i[0]
             name = i[1]
-
-            price_name = './stocks/' + code + '_price_' + freq + '.csv'
             if os.path.exists(price_name):
-                os.remove(price_name)
-
-            fetch_kline_data(code, freq, start)
-            if os.path.exists(price_name):
-                if freq == 'D':
-                    if os.path.exists(price_name):
-                        df = pd.read_csv(price_name, header=None)  # 读取数据
-                        cols = list(df)
-                        cols.insert(3, cols.pop(cols.index(6)))
-                        cols.pop(cols.index(0))
-                        df = df.loc[:, cols]
-                        df.to_csv(price_name, header=None)
-                    time.sleep(0.1)
                 cmd = './user/show.py ' + code + ' ' + name + ' ' + freq
                 # print(cmd)
                 os.system(cmd)
