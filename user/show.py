@@ -29,7 +29,7 @@ class Show(object):
         self.name = name
         self.code = code
         csv_data = pd.read_csv(self.path + self.code + '_price_' +
-                               freq + '.csv', usecols=[2, 3], header=None)  # 读取数据
+                               freq + '.csv', usecols=[2, 3, 10], header=None)  # 读取数据
         self.data = csv_data.values.tolist()
         self.freq = freq
 
@@ -50,7 +50,10 @@ class Show(object):
         y = [round(i, 2) for i in y]
         y.reverse()
         # print(y)
-        return xs, y
+        amount = [i[2] for i in self.data]
+        amount = [round(i, 2) for i in amount]
+        amount.reverse()
+        return xs, y, amount
 
     def get_point(self, xs, y):
         price_last = 0
@@ -134,12 +137,16 @@ class Show(object):
             plt.plot(x, y, color='green', linewidth=linewidth,
                      linestyle="--", label="y")
 
-    # def amount_select(self, xs, ys):
-    #     for i in range(4, len(ys)):
-    #         if(ys[i-3] < ys[i-4]) and :
-    #             if(ys[i-2] < ys[i-3]) and True:
-    #                 if(ys[i-1] < ys[i-2]) and True:
-    #                     if(ys[i] > ys[i-1]) and True:
+    def amount_price_select(self, xs, ys, amount):
+        code = self.code + ':'
+        for i in range(4, len(ys)):
+            if(ys[i-3] < ys[i-4]) and amount[i-3] < amount[i-4]*0.9:
+                if(ys[i-2] < ys[i-3]) and amount[i-2] < amount[i-3]*0.9:
+                    if(ys[i-1] < ys[i-2]) and amount[i-1] < amount[i-2]*0.9:
+                        if(ys[i] > ys[i-1]) and amount[i] > amount[i-1]*1.2:
+                            if (len(ys) - i - 1) < 1:
+                                print(code, self.name,
+                                      xs[i], 'amount_price rush!!!')
 
     def get_smooth(self, price, number):
         smooth = [0]
@@ -181,7 +188,7 @@ class Show(object):
         rsi24 = self.get_rsi(ys, 24)
 
         for i in range(0, len(ys)):
-            if (len(ys) - i - 1) < 5 and rsi6[i] > rsi12[i] and rsi6[i] < 30:
+            if (len(ys) - i - 1) < 5 and rsi6[i] > rsi12[i] and rsi6[i] < 20:
                 print(code, self.name, xs[i], 'rsi rush!')
 
     def get_average(self, price, number):
@@ -284,10 +291,12 @@ class Show(object):
         # fig1, ax = plt.subplots()
         plt.title(self.name)
 
-        xs, ys = self.get_position()
+        xs, ys, amount = self.get_position()
 
+        flag = False
         flag = self.average_line_select(xs, ys)
         self.rsi_select(xs, ys)
+        self.amount_price_select(xs, ys, amount)
         high_x, high_y, low_x, low_y = self.get_point(xs, ys)
         self.draw_point(high_x, high_y, low_x, low_y)
         # self.draw_high_line(high_x, high_y)
