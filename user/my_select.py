@@ -12,6 +12,7 @@ import heapq
 
 l = {}
 
+
 def get_stocks():
     stocks = []
     for key, value in l.items():
@@ -70,14 +71,17 @@ def get_stocks():
         for v in value:
             score = (average_pb - v['pb'])/abs(average_pb)
             score += (v['roe'] - average_roe)/abs(average_roe)
-            score += (v['grossprofit_margin'] - average_grossprofit_margin)/abs(average_grossprofit_margin)
-            score += (v['ratio_cfps_eps'] - average_ratio_cfps_eps)/abs(average_ratio_cfps_eps)
+            score += (v['grossprofit_margin'] -
+                      average_grossprofit_margin)/abs(average_grossprofit_margin)
+            score += (v['ratio_cfps_eps'] - average_ratio_cfps_eps) / \
+                abs(average_ratio_cfps_eps)
             score += (v['or_yoy'] - average_or_yoy)/abs(average_or_yoy)*0.5
             # score += (v['netprofit_yoy'] - average_netprofit_yoy)/abs(average_netprofit_yoy)*0.5
-            total_score.append(round(score,2))
+            total_score.append(round(score, 2))
 
         number = int(len(total_score)/10)+1
-        re1 = map(total_score.index, heapq.nlargest(number, total_score)) #求最大的三个索引    nsmallest与nlargest相反，求最小
+        # 求最大的三个索引    nsmallest与nlargest相反，求最小
+        re1 = map(total_score.index, heapq.nlargest(number, total_score))
         # print(key, total_score)
         # print(key, all_pb)
         # print(key, all_roe)
@@ -91,12 +95,13 @@ def get_stocks():
             # print(all_code[i], all_name[i], all_pe[i], all_pb[i], all_roe[i], all_grossprofit_margin[i], all_ratio_cfps_eps[i], all_or_yoy[i])
             if all_total[i] > 1000000:
                 stocks.append([all_code[i], all_name[i], key, len(value), round(all_total[i], 2), round(all_pe[i], 2), round(all_pb[i], 2), round(all_roe[i], 2),
-                round(all_grossprofit_margin[i], 2), round(all_ratio_cfps_eps[i], 2), round(all_or_yoy[i], 2), round(all_netprofit_yoy[i], 2)])
+                               round(all_grossprofit_margin[i], 2), round(all_ratio_cfps_eps[i], 2), round(all_or_yoy[i], 2), round(all_netprofit_yoy[i], 2)])
 
     return stocks
 
+
 class Select(object):
-    def __init__(self, data=None, code='', path='./stocks/', industry='Unknown', name = '', freq = 'D'):
+    def __init__(self, data=None, code='', path='./stocks/', industry='Unknown', name='', freq='D'):
         signal.signal(signal.SIGINT, self.signal_handler)
         if path == '':
             self.path = './'
@@ -110,48 +115,51 @@ class Select(object):
         self.freq = freq
 
         # 日线价格
-        csv_data = pd.read_csv(self.path + self.code + '_price_' + freq + '.csv', usecols = [3])  # 读取数据
+        csv_data = pd.read_csv(self.path + self.code +
+                               '_price_' + freq + '.csv', usecols=[3])  # 读取数据
         self.price = [i[0] for i in csv_data.values.tolist()]
         # print(self.price)
 
         # 期末日期
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['end_date'])
+        csv_data = pd.read_csv(self.path + self.file, usecols=['end_date'])
         self.end_date = [i[0] for i in csv_data.values.tolist()]
 
         # 每股净利润
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['eps'])
+        csv_data = pd.read_csv(self.path + self.file, usecols=['eps'])
         self.eps = [i[0] for i in csv_data.values.tolist()]
 
         # 每股净资产
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['bps'])
+        csv_data = pd.read_csv(self.path + self.file, usecols=['bps'])
         self.bps = [i[0] for i in csv_data.values.tolist()]
 
         # 净资产收益率
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['roe'])
+        csv_data = pd.read_csv(self.path + self.file, usecols=['roe'])
         self.roe = [i[0] for i in csv_data.values.tolist()]
 
         # 非经常性损益
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['extra_item'])
+        csv_data = pd.read_csv(self.path + self.file, usecols=['extra_item'])
         self.extra_item = [i[0] for i in csv_data.values.tolist()]
 
         # 扣除非经常性损益后的净利润
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['profit_dedt'])
+        csv_data = pd.read_csv(self.path + self.file, usecols=['profit_dedt'])
         self.profit_dedt = [i[0] for i in csv_data.values.tolist()]
 
         # 销售毛利率
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['grossprofit_margin'])
+        csv_data = pd.read_csv(self.path + self.file,
+                               usecols=['grossprofit_margin'])
         self.grossprofit_margin = [i[0] for i in csv_data.values.tolist()]
 
         # 归属母公司股东的净利润同比增长率(%)
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['netprofit_yoy'])
+        csv_data = pd.read_csv(self.path + self.file,
+                               usecols=['netprofit_yoy'])
         self.netprofit_yoy = [i[0] for i in csv_data.values.tolist()]
 
         # 每股经营活动产生的现金流量净额
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['ocfps'])
+        csv_data = pd.read_csv(self.path + self.file, usecols=['ocfps'])
         self.ocfps = [i[0] for i in csv_data.values.tolist()]
 
         # 营业收入同比增长率
-        csv_data = pd.read_csv(self.path + self.file, usecols = ['or_yoy'])
+        csv_data = pd.read_csv(self.path + self.file, usecols=['or_yoy'])
         self.or_yoy = [i[0] for i in csv_data.values.tolist()]
 
     def signal_handler(self, signal, frame):
@@ -189,10 +197,11 @@ class Select(object):
         roe = self.roe[0]/f
 
         #  单位(万)
-        total = self.price[0]*(self.extra_item[0]+self.profit_dedt[0])/self.eps[0]/10000
+        total = self.price[0]*(self.extra_item[0] +
+                               self.profit_dedt[0])/self.eps[0]/10000
         # if total < 1000000:
-            # print('市值小于100亿:', self.code, self.name, total)
-            # return False
+        # print('市值小于100亿:', self.code, self.name, total)
+        # return False
 
         ratio_cfps_eps = self.ocfps[0] / self.eps[0]
 
@@ -226,6 +235,7 @@ class Select(object):
         # print('ratio_cfps_eps:', ratio_cfps_eps)
         return True
 
+
 if __name__ == "__main__":
     code = sys.argv[1]
     freq = 'D'
@@ -242,6 +252,6 @@ if __name__ == "__main__":
     elif len(sys.argv) == 3:
         name = sys.argv[2]
 
-    select = Select(code = code, name = name, path=path, freq=freq)
+    select = Select(code=code, name=name, path=path, freq=freq)
     select.select()
     print(get_stocks())

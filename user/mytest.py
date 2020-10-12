@@ -86,12 +86,14 @@ if __name__ == '__main__':
     elif len(sys.argv) == 2:
         start = sys.argv[1]
 
-    if update == 3:
-        os.remove('./stocks/*')
-    elif update == 2:
+    if update == '3':
+        cmd = 'rm -rf ./stocks/*'
+        os.system(cmd)
+    elif update == '2':
         files = './stocks/*_price_' + freq + '*'
-        os.remove(files)
-    elif update == 1:
+        cmd = 'rm -rf ' + files
+        os.system(cmd)
+    elif update == '1':
         if os.path.exists('./stocks.csv'):
             csv_data = pd.read_csv('./stocks.csv', header=None)  # 读取数据
             data = csv_data.values.tolist()
@@ -144,7 +146,7 @@ if __name__ == '__main__':
                             cols.pop(cols.index(0))
                             df = df.loc[:, cols]
                             df.to_csv(price_name, header=None)
-                        time.sleep(0.1)
+                        # time.sleep(0.1)
                     else:
                         time.sleep(0.4)
 
@@ -153,6 +155,9 @@ if __name__ == '__main__':
                     select = Select(
                         code=code, name=name, industry=industry, path='./stocks/', freq=freq)
                     select.select()
+                # cmd = './user/show.py ' + code + ' ' + name + ' ' + freq
+                # os.system(cmd)
+
         stocks = my_select.get_stocks()
         # print(stocks)
         f_csv.writerows(stocks)

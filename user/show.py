@@ -11,11 +11,14 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt   # 导入模块 matplotlib.pyplot，并简写成 plt
 import numpy as np                # 导入模块 numpy，并简写成 np
+import csv
 
 # 解决中文显示问题
 mpl.matplotlib_fname()
 mpl.rcParams[u'font.sans-serif'] = ['simhei']
 mpl.rcParams['axes.unicode_minus'] = False
+
+statistics = [[0 for row in range(0)] for col in range(13)]
 
 
 class Show(object):
@@ -137,16 +140,39 @@ class Show(object):
             plt.plot(x, y, color='green', linewidth=linewidth,
                      linestyle="--", label="y")
 
+    def get_statistics(self, xs, ys, index, tag):
+        if index+30 > len(ys)-1 or index < 30:
+            return
+
+        statistics[0].append(self.code)
+        statistics[1].append(self.name)
+        statistics[2].append(tag)
+        statistics[3].append(datetime.strftime(xs[index], "%Y%m%d"))
+        statistics[4].append(ys[index])
+        statistics[5].append(ys[index+1])
+        statistics[6].append(ys[index+2])
+        statistics[7].append(ys[index+3])
+        statistics[8].append(ys[index+4])
+        statistics[9].append(ys[index+5])
+        statistics[10].append(ys[index+10])
+        statistics[11].append(ys[index+20])
+        statistics[12].append(ys[index+30])
+        # print(statistics)
+
     def amount_price_select(self, xs, ys, amount):
         code = self.code + ':'
-        for i in range(4, len(ys)):
-            if(ys[i-3] < ys[i-4]) and amount[i-3] < amount[i-4]*0.9:
-                if(ys[i-2] < ys[i-3]) and amount[i-2] < amount[i-3]*0.9:
-                    if(ys[i-1] < ys[i-2]) and amount[i-1] < amount[i-2]*0.9:
-                        if(ys[i] > ys[i-1]) and amount[i] > amount[i-1]*1.2:
-                            if (len(ys) - i - 1) < 1:
-                                print(code, self.name,
-                                      xs[i], 'amount_price rush!!!')
+        for i in range(5, len(ys)):
+            if(ys[i-4] < ys[i-5]) and amount[i-4] < amount[i-5]*0.9:
+                if(ys[i-3] < ys[i-4]) and amount[i-3] < amount[i-4]*0.9:
+                    if(ys[i-2] < ys[i-3]) and amount[i-2] < amount[i-3]*0.9:
+                        # self.get_statistics(xs, ys, i, 'amount0')
+                        if(ys[i-1] < ys[i-2]) and amount[i-1] < amount[i-2]*0.9:
+                            # self.get_statistics(xs, ys, i, 'amount1')
+                            if(ys[i] > ys[i-1]) and amount[i] > amount[i-1]*1.2:
+                                # self.get_statistics(xs, ys, i, 'amount2')
+                                if (len(ys) - i - 1) < 2:
+                                    print(code, self.name,
+                                          xs[i], 'amount_price rush!!!')
 
     def get_smooth(self, price, number):
         smooth = [0]
@@ -157,7 +183,6 @@ class Show(object):
 
     def get_rsi(self, price, number):
         rsi = [0]
-
         up = [0]
         down = [0]
         for i in range(1, len(price)):
@@ -187,9 +212,28 @@ class Show(object):
         rsi12 = self.get_rsi(ys, 12)
         rsi24 = self.get_rsi(ys, 24)
 
+        pre_rush = False
+        rush = False
         for i in range(0, len(ys)):
-            if (len(ys) - i - 1) < 5 and rsi6[i] > rsi12[i] and rsi6[i] < 20:
-                print(code, self.name, xs[i], 'rsi rush!')
+            if rsi6[i] > rsi12[i]:
+                if pre_rush == False and rsi12[i] < 40:
+                    pre_rush = True
+                    self.get_statistics(xs, ys, i, 'rsi6_12')
+                    if (len(ys) - i - 1) < 2:
+                        print(code, self.name, xs[i], 'rsi pre rush!')
+
+                # if rsi12[i] >= rsi24[i]:
+                #     if rush == False:
+                #         rush = True
+                #         self.get_statistics(xs, ys, i, 'rsi1224')
+                #         if (len(ys) - i - 1) < 2:
+                #             print(code, self.name, xs[i], 'rsi rush!!!')
+
+            if rsi6[i] < rsi12[i]:
+                pre_rush = False
+            if rsi12[i] < rsi24[i]:
+                if rush == False:
+                    pre_rush = False
 
     def get_average(self, price, number):
         average = []
@@ -221,33 +265,35 @@ class Show(object):
             x4_9 = 0
             x9_18 = 0
             k = 1
-            if(i == len(ys)-k) and ma4[i] < ma9[i]:
-                t8 = ma9[i]*9 - ys[i-(9-k)]
-                t3 = ma4[i]*4 - ys[i-(4-k)]
-                x4_9 = (4*t8 - 9*t3)/5
-                if x4_9 > ys[i] and x4_9 <= ys[i]*1.1:
-                    print(code, self.name, 'if price shoud rise %.2f%% to %.2f average can pre_rush' % (
-                        (x4_9/ys[i]-1)*100, x4_9))
+            # if(i == len(ys)-k) and ma4[i] < ma9[i]:
+            #     t8 = ma9[i]*9 - ys[i-(9-k)]
+            #     t3 = ma4[i]*4 - ys[i-(4-k)]
+            #     x4_9 = (4*t8 - 9*t3)/5
+            # if x4_9 > ys[i] and x4_9 <= ys[i]*1.1:
+            #     print(code, self.name, 'if price shoud rise %.2f%% to %.2f average can pre_rush' % (
+            #         (x4_9/ys[i]-1)*100, x4_9))
 
             if ma4[i] >= ma9[i]:
-                if(i == len(ys)-k) and ma9[i] < ma18[i]:
-                    t8 = ma9[i]*9 - ys[i-(9-k)]
-                    t17 = ma18[i]*18 - ys[i-(18-k)]
-                    x9_18 = (9*t17 - 18*t8)/9
-                    if x9_18 > ys[i] and x9_18 <= ys[i]*1.1:
-                        print(code, self.name, 'if price shoud rise %.2f%% to %.2f average can rush' % (
-                            (x9_18/ys[i]-1)*100, x9_18))
+                # if(i == len(ys)-k) and ma9[i] < ma18[i]:
+                #     t8 = ma9[i]*9 - ys[i-(9-k)]
+                #     t17 = ma18[i]*18 - ys[i-(18-k)]
+                #     x9_18 = (9*t17 - 18*t8)/9
+                #     if x9_18 > ys[i] and x9_18 <= ys[i]*1.1:
+                #         print(code, self.name, 'if price shoud rise %.2f%% to %.2f average can rush' % (
+                #             (x9_18/ys[i]-1)*100, x9_18))
 
                 if pre_rush == False:
                     pre_rush = True
-                    if (len(ys) - i - 1) < 2:
-                        print(code, self.name, xs[i], 'average pre_rush!')
+                    self.get_statistics(xs, ys, i, 'ma4___9')
+                    # if (len(ys) - i - 1) < 2:
+                    #     print(code, self.name, xs[i], 'average pre_rush!')
                 if ma9[i] >= ma18[i]:
                     if rush == False:
                         rush = True
+                        self.get_statistics(xs, ys, i, 'ma9__18')
                         plt.scatter(xs[i], ys[i], s=50,
                                     color='red')      # s 为点的 size
-                        if (len(ys) - i - 1) < 1:
+                        if (len(ys) - i - 1) < 2:
                             print(code, self.name, xs[i], 'average rush!!!')
                             ret = True
 
@@ -330,6 +376,19 @@ class Show(object):
             plt.savefig(self.path + self.code + '_' +
                         self.name + '_' + self.freq + '.png')
 
+        filename = './statistics.csv'
+        if not os.path.exists(filename):
+            with open(filename, 'w') as f:
+                f_csv = csv.writer(f)
+                ar2 = [[row[i] for row in statistics]
+                       for i in range(len(statistics[0]))]
+                f_csv.writerows(ar2)
+        else:
+            with open(filename, 'w') as f:
+                f_csv = csv.writer(f)
+                ar2 = [[row[i] for row in statistics]
+                       for i in range(len(statistics[0]))]
+                f_csv.writerows(ar2)
         # plt.show(block=False)
         # while plt.waitforbuttonpress() == False:
         #     time.sleep(0.1)
