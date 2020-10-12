@@ -384,7 +384,7 @@ class Show(object):
                        for i in range(len(statistics[0]))]
                 f_csv.writerows(ar2)
         else:
-            with open(filename, 'w') as f:
+            with open(filename, 'a') as f:
                 f_csv = csv.writer(f)
                 ar2 = [[row[i] for row in statistics]
                        for i in range(len(statistics[0]))]
