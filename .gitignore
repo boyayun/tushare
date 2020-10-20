@@ -79,4 +79,6 @@ tags
 *.SH
 *.SZ
 *.png
+statistics.csv
+stocks.csv
 stocks/
