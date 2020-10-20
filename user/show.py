@@ -220,14 +220,14 @@ class Show(object):
                     pre_rush = True
                     self.get_statistics(xs, ys, i, 'rsi6_12')
                     if (len(ys) - i - 1) < 2:
-                        print(code, self.name, xs[i], 'rsi pre rush!')
+                        print(code, self.name, xs[i], 'rsi rush!')
 
-                # if rsi12[i] >= rsi24[i]:
-                #     if rush == False:
-                #         rush = True
-                #         self.get_statistics(xs, ys, i, 'rsi1224')
-                #         if (len(ys) - i - 1) < 2:
-                #             print(code, self.name, xs[i], 'rsi rush!!!')
+                        # if rsi12[i] >= rsi24[i]:
+                        #     if rush == False:
+                        #         rush = True
+                        #         self.get_statistics(xs, ys, i, 'rsi1224')
+                        #         if (len(ys) - i - 1) < 2:
+                        #             print(code, self.name, xs[i], 'rsi rush!!!')
 
             if rsi6[i] < rsi12[i]:
                 pre_rush = False
