@@ -213,8 +213,14 @@ class Show(object):
         rsi24 = self.get_rsi(ys, 24)
 
         pre_rush = False
-        rush = False
+        # rush = False
         for i in range(0, len(ys)):
+            if rsi6[i] < rsi12[i]:
+                pre_rush = False
+            # if rsi12[i] < rsi24[i]:
+            #     if rush == False:
+            #         pre_rush = False
+
             if rsi6[i] > rsi12[i]:
                 if pre_rush == False and rsi12[i] < 40:
                     pre_rush = True
@@ -228,12 +234,6 @@ class Show(object):
                         #         self.get_statistics(xs, ys, i, 'rsi1224')
                         #         if (len(ys) - i - 1) < 2:
                         #             print(code, self.name, xs[i], 'rsi rush!!!')
-
-            if rsi6[i] < rsi12[i]:
-                pre_rush = False
-            if rsi12[i] < rsi24[i]:
-                if rush == False:
-                    pre_rush = False
 
     def get_average(self, price, number):
         average = []
