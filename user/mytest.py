@@ -73,6 +73,36 @@ if __name__ == '__main__':
     # 初始化接口
     ts_api = ts.pro_api()
 
+    # 股东人数
+    stk_holdernumber = ts_api.stk_holdernumber(ts_code='002706.Sz')
+    # print(stk_holdernumber)
+    # exit(0)
+
+    # 指数基本信息
+    # MSCI:MSCI指数
+    # CSI:中证指数
+    # SSE:上交所指数
+    # SZSE:深交所指数
+    # CICC:中金所指数
+    # SW:申万指数
+    # index_basic = ts_api.index_basic(market='CSI')
+    # # print(index_basic)
+    # for i in range(0, len(index_basic['ts_code'])):
+    #     code = index_basic['ts_code'][i]
+    #     name = index_basic['name'][i]
+    #     if '深' in name or '中证' in name:
+    #         print(code, name)
+
+    # # 指数成分和权重
+    # index_weight = ts_api.index_weight(
+    #     index_code='512760.ETF', start_date='20200101', end_date='20201010')
+    # print(index_weight)
+
+    # df = ts_api.fund_daily(ts_code='512760.SH',
+    #                        start_date='20200101', end_date='20201010')
+    # print(df)
+    # exit(0)
+
     update = 0    # 0:不更新, 1:更新精选股的技术数据， 2:更新已选股的技术数据，3:更新所有股的财务数据
     freq = 'D'
     start = ''
@@ -167,14 +197,18 @@ if __name__ == '__main__':
     if os.path.exists('./stocks.csv'):
         csv_data = pd.read_csv('./stocks.csv', header=None)  # 读取数据
         data = csv_data.values.tolist()
+        l = []
         for i in data:
             # print(i)
             code = i[0]
             name = i[1]
-            if os.path.exists(price_name):
-                cmd = './user/show.py ' + code + ' ' + name + ' ' + freq
-                # print(cmd)
-                os.system(cmd)
+
+            if name not in l:
+                l.append(name)
+                if os.path.exists(price_name):
+                    cmd = './user/show.py ' + code + ' ' + name + ' ' + freq
+                    # print(cmd)
+                    os.system(cmd)
 
     # # 业务预告
     # forecast = ts_api.forecast(ann_date='20190131',
@@ -205,16 +239,6 @@ if __name__ == '__main__':
     # # 上市公司完整财务指标获取
     # fetch_finance_indicator('603986.SH')
 
-    # 指数基本信息
-    # MSCI:MSCI指数
-    # CSI:中证指数
-    # SSE:上交所指数
-    # SZSE:深交所指数
-    # CICC:中金所指数
-    # SW:申万指数
-    # index_basic = ts_api.index_basic(market='CSI')
-    # print(index_basic)
-
     # # 指数日线行情
     # index_daily = ts_api.index_daily(ts_code='399300.SZ', start_date='20190101', end_date='20190910')
     # print(index_daily)
@@ -226,10 +250,6 @@ if __name__ == '__main__':
     # # 指数月线行情
     # index_monthly = ts_api.index_monthly(ts_code='399300.SZ', start_date='20190101', end_date='20190910')
     # print(index_monthly)
-
-    # # 指数成分和权重
-    # index_weight = ts_api.index_weight(index_code='399300.SZ', start_date='20180901', end_date='20190930')
-    # print(index_weight)
 
     # 港股通10大成交股
     # ggt_top10 = ts_api.ggt_top10(trade_date='20190925')
@@ -266,10 +286,6 @@ if __name__ == '__main__':
     # # 股票开户数据
     # stk_account = ts_api.stk_account(start_date='20190101', end_date='20191231')
     # print(stk_account)
-
-    # # 股东人数
-    # stk_holdernumber = ts_api.stk_holdernumber(ts_code='603986.SH')
-    # print(stk_holdernumber)
 
     # # fund_basic = ts_api.fund_basic(market='E')
     # # print(fund_basic)

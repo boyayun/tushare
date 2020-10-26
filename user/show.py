@@ -18,7 +18,7 @@ mpl.matplotlib_fname()
 mpl.rcParams[u'font.sans-serif'] = ['simhei']
 mpl.rcParams['axes.unicode_minus'] = False
 
-statistics = [[0 for row in range(0)] for col in range(13)]
+statistics = [[0 for row in range(0)] for col in range(14)]
 
 
 class Show(object):
@@ -140,23 +140,24 @@ class Show(object):
             plt.plot(x, y, color='green', linewidth=linewidth,
                      linestyle="--", label="y")
 
-    def get_statistics(self, xs, ys, index, tag):
-        if index+30 > len(ys)-1 or index < 30:
+    def get_statistics(self, xs, ys, index, tag, meta):
+        if index+22 > len(ys)-1 or index < 22:
             return
 
         statistics[0].append(self.code)
         statistics[1].append(self.name)
         statistics[2].append(tag)
-        statistics[3].append(datetime.strftime(xs[index], "%Y%m%d"))
-        statistics[4].append(ys[index])
-        statistics[5].append(ys[index+1])
-        statistics[6].append(ys[index+2])
-        statistics[7].append(ys[index+3])
-        statistics[8].append(ys[index+4])
-        statistics[9].append(ys[index+5])
-        statistics[10].append(ys[index+10])
-        statistics[11].append(ys[index+20])
-        statistics[12].append(ys[index+30])
+        statistics[3].append(meta)
+        statistics[4].append(datetime.strftime(xs[index], "%Y%m%d"))
+        statistics[5].append(ys[index])
+        statistics[6].append(ys[index+1])
+        statistics[7].append(ys[index+2])
+        statistics[8].append(ys[index+3])
+        statistics[9].append(ys[index+4])
+        statistics[10].append(ys[index+5])
+        statistics[11].append(ys[index+10])
+        statistics[12].append(ys[index+15])
+        statistics[13].append(ys[index+22])
         # print(statistics)
 
     def amount_price_select(self, xs, ys, amount):
@@ -173,6 +174,35 @@ class Show(object):
                                 if (len(ys) - i - 1) < 2:
                                     print(code, self.name,
                                           xs[i], 'amount_price rush!!!')
+
+    def price_select(self, xs, ys):
+        code = self.code + ':'
+        max = 0
+        rush = False
+        rsi6 = self.get_rsi(ys, 6)
+        rsi12 = self.get_rsi(ys, 12)
+
+        for i in range(0, len(ys)):
+            if ys[i] >= max:
+                max = ys[i]
+            #     if rush == False:
+            #         rush = True
+            #         self.get_statistics(xs, ys, i, 'price__', 'rush')
+            #         if (len(ys) - i - 1) < 2:
+            #             print(code, self.name, xs[i], 'price rush!!!')
+            if rsi6[i] > rsi12[i]:
+                if rush == False and rsi12[i] < 40 and rsi12[i] > 30:
+                    rush = True
+                    self.get_statistics(xs, ys, i, 'test', 'rush')
+                    max = ys[i]
+                    if (len(ys) - i - 1) < 2:
+                        print(code, self.name, xs[i], 'rsi rush!!!')
+
+            if ys[i] < max*0.95 and rush == True:
+                rush = False
+                self.get_statistics(xs, ys, i, 'test', 'run')
+                if (len(ys) - i - 1) < 2:
+                    print(code, self.name, xs[i], 'test run!!!')
 
     def get_smooth(self, price, number):
         smooth = [0]
@@ -210,30 +240,28 @@ class Show(object):
 
         rsi6 = self.get_rsi(ys, 6)
         rsi12 = self.get_rsi(ys, 12)
-        rsi24 = self.get_rsi(ys, 24)
+        # rsi24 = self.get_rsi(ys, 24)
 
-        pre_rush = False
-        # rush = False
+        rush = False
+        run = False
+
         for i in range(0, len(ys)):
-            if rsi6[i] < rsi12[i]:
-                pre_rush = False
-            # if rsi12[i] < rsi24[i]:
-            #     if rush == False:
-            #         pre_rush = False
-
             if rsi6[i] > rsi12[i]:
-                if pre_rush == False and rsi12[i] < 40:
-                    pre_rush = True
-                    self.get_statistics(xs, ys, i, 'rsi6_12')
+                run = False
+                if rush == False and rsi12[i] < 40 and rsi12[i] > 30:
+                    rush = True
+                    self.get_statistics(xs, ys, i, 'rsi6_12', 'rush')
+                    max = ys[i]
                     if (len(ys) - i - 1) < 2:
-                        print(code, self.name, xs[i], 'rsi rush!')
+                        print(code, self.name, xs[i], 'rsi rush!!!')
 
-                        # if rsi12[i] >= rsi24[i]:
-                        #     if rush == False:
-                        #         rush = True
-                        #         self.get_statistics(xs, ys, i, 'rsi1224')
-                        #         if (len(ys) - i - 1) < 2:
-                        #             print(code, self.name, xs[i], 'rsi rush!!!')
+            if rsi6[i] < rsi12[i]:
+                rush = False
+                if run == False and rsi6[i] > 60 and rsi6[i] < 70:
+                    run = True
+                    self.get_statistics(xs, ys, i, 'rsi6_12', 'run')
+                    if (len(ys) - i - 1) < 2:
+                        print(code, self.name, xs[i], 'rsi run!!!')
 
     def get_average(self, price, number):
         average = []
@@ -262,35 +290,16 @@ class Show(object):
         code = self.code + ':'
         for i in range(0, len(ys)):
             # rush
-            x4_9 = 0
-            x9_18 = 0
-            k = 1
-            # if(i == len(ys)-k) and ma4[i] < ma9[i]:
-            #     t8 = ma9[i]*9 - ys[i-(9-k)]
-            #     t3 = ma4[i]*4 - ys[i-(4-k)]
-            #     x4_9 = (4*t8 - 9*t3)/5
-            # if x4_9 > ys[i] and x4_9 <= ys[i]*1.1:
-            #     print(code, self.name, 'if price shoud rise %.2f%% to %.2f average can pre_rush' % (
-            #         (x4_9/ys[i]-1)*100, x4_9))
-
-            if ma4[i] >= ma9[i]:
-                # if(i == len(ys)-k) and ma9[i] < ma18[i]:
-                #     t8 = ma9[i]*9 - ys[i-(9-k)]
-                #     t17 = ma18[i]*18 - ys[i-(18-k)]
-                #     x9_18 = (9*t17 - 18*t8)/9
-                #     if x9_18 > ys[i] and x9_18 <= ys[i]*1.1:
-                #         print(code, self.name, 'if price shoud rise %.2f%% to %.2f average can rush' % (
-                #             (x9_18/ys[i]-1)*100, x9_18))
-
+            if ma4[i] > ma9[i]:
                 if pre_rush == False:
                     pre_rush = True
-                    self.get_statistics(xs, ys, i, 'ma4___9')
+                    self.get_statistics(xs, ys, i, 'ma4___9', 'rush')
                     # if (len(ys) - i - 1) < 2:
                     #     print(code, self.name, xs[i], 'average pre_rush!')
-                if ma9[i] >= ma18[i]:
+                if ma9[i] > ma18[i]:
                     if rush == False:
                         rush = True
-                        self.get_statistics(xs, ys, i, 'ma9__18')
+                        self.get_statistics(xs, ys, i, 'ma9__18', 'rush')
                         plt.scatter(xs[i], ys[i], s=50,
                                     color='red')      # s 为点的 size
                         if (len(ys) - i - 1) < 2:
@@ -303,23 +312,25 @@ class Show(object):
                 if rush == False:
                     pre_rush = False
             # run
-            # if ma4[i] <= ma9[i]:
-            #     if pre_run == False:
-            #         pre_run = True
-            #         code = self.code + ':'
-            #         print(code, xs[i], 'pre_run!')
-            #     if ma9[i] <= ma18[i]:
-            #         if run == False:
-            #             run = True
-            #             code = self.code + ':'
-            #             plt.scatter(xs[i], ys[i], s=50, color='green')      # s 为点的 size
-            #             print(code, xs[i], 'run!!!')
+            if ma4[i] < ma9[i]:
+                if pre_run == False:
+                    pre_run = True
+                    self.get_statistics(xs, ys, i, 'ma4___9', 'run')
+                    # print(code, xs[i], 'pre_run!')
+                if ma9[i] < ma18[i]:
+                    if run == False:
+                        run = True
+                        self.get_statistics(xs, ys, i, 'ma9__18', 'run')
+                        plt.scatter(xs[i], ys[i], s=50,
+                                    color='green')      # s 为点的 size
+                        if (len(ys) - i - 1) < 2:
+                            print(code, self.name, xs[i], 'average run!!!')
 
-            # if ma9[i] > ma18[i]:
-            #     run = False
-            # if ma4[i] > ma9[i]:
-            #     if run == False:
-            #         pre_run = False
+            if ma9[i] > ma18[i]:
+                run = False
+            if ma4[i] > ma9[i]:
+                if run == False:
+                    pre_run = False
         plt.plot(xs, ma4, color=self.colors['ma4'],
                  linewidth=1.5, linestyle="-", label='ma4')
         plt.plot(xs, ma9, color=self.colors['ma9'],
@@ -341,7 +352,8 @@ class Show(object):
 
         flag = False
         flag = self.average_line_select(xs, ys)
-        self.rsi_select(xs, ys)
+        # self.rsi_select(xs, ys)
+        self.price_select(xs, ys)
         self.amount_price_select(xs, ys, amount)
         high_x, high_y, low_x, low_y = self.get_point(xs, ys)
         self.draw_point(high_x, high_y, low_x, low_y)
